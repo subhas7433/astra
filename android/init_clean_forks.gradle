@@ -1,0 +1,15 @@
+// Gradle init script to ignore macOS resource fork files during Android builds
+// Place in ~/.gradle/init.d/ or reference with --init-script flag
+
+gradle.projectsEvaluated {
+    allprojects {
+        tasks.withType(com.android.build.gradle.tasks.ProcessAndroidResources).configureEach {
+            doFirst {
+                // Remove resource fork files before processing
+                project.fileTree(buildDir).matching {
+                    include '***/._*'
+                }.each { it.delete() }
+            }
+        }
+    }
+}

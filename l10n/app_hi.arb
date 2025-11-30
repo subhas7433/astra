@@ -1,0 +1,13 @@
+{
+  "@@locale": "hi",
+  "appName": "Astro GPT",
+  "home": "Home",
+  "settings": "Settings",
+  "chat": "Chat",
+  "horoscope": "Rashifal",
+  "loading": "Loading...",
+  "error": "Kuch galat ho gaya",
+  "retry": "Punah prayaas",
+  "cancel": "Radd karein",
+  "ok": "OK"
+}

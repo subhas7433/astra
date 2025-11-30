@@ -12,6 +12,11 @@
 .swiftpm/
 migrate_working_dir/
 
+# macOS resource forks (causes Android Gradle build issues)
+._*
+.AppleDouble
+.LSOverride
+
 # IntelliJ related
 *.iml
 *.ipr
@@ -27,11 +32,12 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
 /build/
-/coverage/
 
 # Symbolication related
 app.*.symbols
@@ -44,5 +50,13 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# macOS metadata
-._*
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# Appwrite
+.appwrite/
