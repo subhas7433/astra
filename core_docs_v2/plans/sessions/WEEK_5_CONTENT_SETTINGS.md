@@ -21,9 +21,19 @@ Complete daily content features (Bhagwan, Mantra, Numerology) and Settings modul
 
 ### What We're NOT Building
 - Push notification settings (Phase 2)
-- Account deletion (Phase 2)
 - Social login (Phase 2)
 - Dark mode (Phase 2)
+
+### Additional Features Added (Gap Coverage)
+- Account Deletion (GDPR compliance, FR-009)
+- FAQsRepository (for "Most Ask Questions", FR-014, FR-030)
+- ReviewsRepository (for astrologer reviews, FR-031)
+
+### Backend Integration (NEW)
+- DailyContentRepository for Bhagwan/Mantra data
+- ChatRepository for message persistence
+- MockAstrologer replacement completion
+- TODO items cleanup
 
 ### Prerequisites (from Week 1-4)
 - [x] DailyContentModel defined
@@ -97,15 +107,54 @@ lib/app/modules/daily_content/
 └─────────────────────────────────┘
 ```
 
+### Backend Tasks (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Create DailyContentRepository | 45 min | Backend |
+| Create FAQsRepository | 30 min | Backend |
+
+### DailyContentRepository Structure
+```dart
+class DailyContentRepository {
+  final IDatabaseService _db;
+
+  Future<Result<DeityModel, AppError>> getTodaysBhagwan();
+  Future<Result<MantraModel, AppError>> getTodaysMantra();
+  Future<Result<List<DeityModel>, AppError>> getAllDeities();
+}
+```
+
+### FAQsRepository Structure (NEW - FR-014, FR-030)
+```dart
+class FAQsRepository {
+  final IDatabaseService _db;
+
+  Future<Result<List<FAQModel>, AppError>> getFAQs({String? category});
+  Future<Result<List<FAQModel>, AppError>> getFAQsByAstrologer(String astrologerId);
+  Future<Result<List<FAQModel>, AppError>> getMostAskedQuestions({int limit = 10});
+}
+
+class FAQModel {
+  final String id;
+  final String questionHindi;
+  final String questionEnglish;
+  final String? category;
+  final String? astrologerId;
+  final int displayOrder;
+}
+```
+
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
+| Create DailyContentRepository | 45 min | Backend |
+| Create FAQsRepository | 30 min | Backend |
 | Module structure | 20 min | Folders + files |
-| TodayBhagwanController | 45 min | Data + actions |
-| TodayBhagwanScreen | 50 min | Full screen |
-| DeityCard widget | 50 min | Image + info |
-| Copy functionality | 25 min | Clipboard + toast |
-| Share functionality | 30 min | Share sheet |
+| TodayBhagwanController | 40 min | Data + actions |
+| TodayBhagwanScreen | 45 min | Full screen |
+| DeityCard widget | 45 min | Image + info |
+| Copy functionality | 20 min | Clipboard + toast |
+| Share functionality | 25 min | Share sheet |
 
 ### Deity Model
 ```dart
@@ -135,11 +184,12 @@ class DeityModel {
 ## Session 2: Today's Mantra Screen (4 hours)
 
 ### Objectives
-1. Build Today's Mantra detail screen
-2. Create mantra display with Sanskrit text
-3. Add transliteration and meaning
-4. Implement audio playback (optional)
-5. Add Copy and Share functionality
+1. Extend DailyContentRepository for mantras
+2. Build Today's Mantra detail screen
+3. Create mantra display with Sanskrit text
+4. Add transliteration and meaning
+5. Implement audio playback (optional)
+6. Add Copy and Share functionality
 
 ### Key Deliverables
 
@@ -181,9 +231,15 @@ class DeityModel {
 └─────────────────────────────────┘
 ```
 
+### Backend Tasks (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Extend DailyContentRepository for mantras | 30 min | Backend |
+
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
+| Extend DailyContentRepository | 30 min | Backend |
 | TodayMantraController | 40 min | Data + state |
 | TodayMantraScreen | 45 min | Full screen |
 | MantraDisplay widget | 45 min | Sanskrit + roman |
@@ -216,14 +272,16 @@ class MantraModel {
 
 ---
 
-## Session 3: Numerology Screen (4 hours)
+## Session 3: Numerology Screen + MockAstrologer Replacement (4 hours)
 
 ### Objectives
-1. Build Numerology feature screen
-2. Create birth date input
-3. Implement numerology calculation
-4. Display life path number
-5. Show personality traits and predictions
+1. Replace MockAstrologer in astrologer_list_controller
+2. Replace MockAstrologer in astrologers_section
+3. Build Numerology feature screen
+4. Create birth date input
+5. Implement numerology calculation
+6. Display life path number
+7. Show personality traits and predictions
 
 ### Key Deliverables
 
@@ -234,6 +292,12 @@ class MantraModel {
 | `DatePickerInput` | Birth date selector |
 | `NumerologyResult` | Number + meaning |
 | `TraitsSection` | Personality traits |
+
+### Refactoring Tasks (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Replace MockAstrologer in astrologer_list_controller | 25 min | Refactor |
+| Replace MockAstrologer in astrologers_section | 15 min | Refactor |
 
 ### Screen Layout
 ```
@@ -278,6 +342,8 @@ class MantraModel {
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
+| Replace MockAstrologer in astrologer_list_controller | 25 min | Refactor |
+| Replace MockAstrologer in astrologers_section | 15 min | Refactor |
 | NumerologyController | 50 min | Calculation logic |
 | NumerologyScreen | 40 min | Screen structure |
 | DatePickerInput | 40 min | Date selector |
@@ -315,14 +381,15 @@ class NumerologyCalculator {
 
 ---
 
-## Session 4: Settings Screen (4 hours)
+## Session 4: Settings Screen + MockAstrologer Cleanup (4 hours)
 
 ### Objectives
-1. Create Settings module structure
-2. Build Settings screen with all options
-3. Implement profile card section
-4. Add navigation to sub-screens
-5. Create Remove Ads entry point
+1. Replace MockAstrologer in astrologer_profile_controller
+2. Create Settings module structure
+3. Build Settings screen with all options
+4. Implement profile card section
+5. Add navigation to sub-screens
+6. Create Remove Ads entry point
 
 ### Key Deliverables
 
@@ -333,6 +400,37 @@ class NumerologyCalculator {
 | `SettingsController` | Settings state |
 | `ProfileCard` | User info card |
 | `SettingsItem` | Reusable list item |
+
+### Backend & Refactoring Tasks (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Create ReviewsRepository | 35 min | Backend |
+| Replace MockAstrologer in astrologer_profile_controller | 20 min | Refactor |
+
+### ReviewsRepository Structure (NEW - FR-031)
+```dart
+class ReviewsRepository {
+  final IDatabaseService _db;
+
+  Future<Result<List<ReviewModel>, AppError>> getReviewsByAstrologer(
+    String astrologerId, {
+    int limit = 10,
+    int offset = 0,
+  });
+  Future<Result<ReviewModel, AppError>> createReview(ReviewModel review);
+  Future<Result<double, AppError>> getAverageRating(String astrologerId);
+}
+
+class ReviewModel {
+  final String id;
+  final String astrologerId;
+  final String userId;
+  final String userName;
+  final int rating; // 1-5
+  final String text;
+  final DateTime createdAt;
+}
+```
 
 ### Screen Layout (from design)
 ```
@@ -356,18 +454,21 @@ class NumerologyCalculator {
 │ 💡 Request Feature         →   │
 ├─────────────────────────────────┤
 │ 🚪 Logout                      │
+│ 🗑️ Delete Account (red)       │  (GDPR - FR-009)
 └─────────────────────────────────┘
 ```
 
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
+| Create ReviewsRepository | 35 min | Backend |
+| Replace MockAstrologer in astrologer_profile_controller | 20 min | Refactor |
 | Module structure | 15 min | Folders + files |
-| SettingsController | 35 min | State management |
-| SettingsScreen | 45 min | Full screen |
-| ProfileCard widget | 40 min | User info card |
-| SettingsItem widget | 30 min | Reusable list item |
-| Navigation wiring | 35 min | All sub-screens |
+| SettingsController | 30 min | State management |
+| SettingsScreen | 40 min | Full screen |
+| ProfileCard widget | 35 min | User info card |
+| SettingsItem widget | 25 min | Reusable list item |
+| Navigation wiring | 30 min | All sub-screens |
 | Logout flow | 20 min | Logout + confirm |
 
 ### SettingsItem Widget (DRY)
@@ -393,14 +494,16 @@ class SettingsItem extends StatelessWidget {
 
 ---
 
-## Session 5: Language & Profile Management (4 hours)
+## Session 5: Language & Profile Management + Chat Backend (4 hours)
 
 ### Objectives
-1. Build Language selection screen
-2. Implement language switching
-3. Create Profile edit screen
-4. Add Favorites list screen
-5. Persist user preferences
+1. Create ChatRepository for message persistence
+2. Replace MockAstrologer in chat_controller
+3. Build Language selection screen
+4. Implement language switching
+5. Create Profile edit screen
+6. Add Favorites list screen
+7. Persist user preferences
 
 ### Key Deliverables
 
@@ -411,6 +514,24 @@ class SettingsItem extends StatelessWidget {
 | `ProfileEditScreen` | Edit user info |
 | `FavoritesScreen` | Saved horoscopes/content |
 | Preference persistence | SharedPreferences |
+
+### Backend Tasks (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Create ChatRepository | 45 min | Backend |
+| Replace MockAstrologer in chat_controller | 25 min | Refactor |
+
+### ChatRepository Structure
+```dart
+class ChatRepository {
+  final IDatabaseService _db;
+
+  Future<Result<ChatSession, AppError>> createSession(String astrologerId);
+  Future<Result<void, AppError>> saveMessage(MessageModel message);
+  Future<Result<List<MessageModel>, AppError>> getMessages(String sessionId);
+  Future<Result<void, AppError>> syncMessages(String sessionId);
+}
+```
 
 ### Language Screen
 ```
@@ -433,12 +554,13 @@ class SettingsItem extends StatelessWidget {
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
+| Create ChatRepository | 45 min | Backend |
+| Replace MockAstrologer in chat_controller | 25 min | Refactor |
 | LanguageScreen | 40 min | Selection UI |
-| LanguageController | 45 min | Switch logic |
-| Locale change | 40 min | GetX locale update |
-| ProfileEditScreen | 50 min | Edit form |
-| FavoritesScreen | 45 min | List of favorites |
-| Preference persistence | 40 min | SharedPreferences |
+| LanguageController | 35 min | Switch logic |
+| ProfileEditScreen | 40 min | Edit form |
+| FavoritesScreen | 35 min | List of favorites |
+| Preference persistence | 35 min | SharedPreferences |
 
 ### Language Switching
 ```dart
@@ -469,14 +591,18 @@ class LanguageController extends GetxController {
 
 ---
 
-## Session 6: About & Feedback Flows (4 hours)
+## Session 6: About & Feedback Flows + TODO Cleanup + Account Deletion (4 hours)
 
 ### Objectives
-1. Create About Us screen
-2. Build Feedback screen with form
-3. Implement Rate Us flow
-4. Add Request Feature form
-5. Final integration and testing
+1. Fix navigation TODOs (notifications, settings, location)
+2. Fix zodiac persistence TODO
+3. Delete mock_astrologer.dart
+4. Implement Account Deletion (GDPR compliance, FR-009)
+5. Create About Us screen
+6. Build Feedback screen with form
+7. Implement Rate Us flow
+8. Add Request Feature form
+9. Final integration and testing
 
 ### Key Deliverables
 
@@ -486,7 +612,70 @@ class LanguageController extends GetxController {
 | `FeedbackScreen` | Feedback form |
 | Rate Us flow | Open app store |
 | `RequestFeatureScreen` | Feature request form |
+| Account Deletion | GDPR-compliant account removal (FR-009) |
 | Widget tests | Settings components |
+
+### Bug Fixes & Cleanup (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Fix navigation TODOs (notifications, settings, location) | 30 min | Bug Fix |
+| Fix zodiac persistence TODO | 15 min | Bug Fix |
+| Implement Account Deletion (GDPR) | 35 min | Feature |
+| Delete mock_astrologer.dart | 10 min | Cleanup |
+
+### Account Deletion Implementation (FR-009)
+```dart
+// In SettingsController
+Future<void> deleteAccount() async {
+  // 1. Show confirmation dialog with warning
+  final confirmed = await Get.dialog<bool>(
+    AlertDialog(
+      title: Text('Delete Account'),
+      content: Text('This will permanently delete your account and all data. This action cannot be undone.'),
+      actions: [
+        TextButton(onPressed: () => Get.back(result: false), child: Text('Cancel')),
+        TextButton(
+          onPressed: () => Get.back(result: true),
+          child: Text('Delete', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed == true) {
+    // 2. Delete user data from Appwrite
+    await _authService.deleteAccount();
+    // 3. Clear local storage
+    await _clearLocalData();
+    // 4. Navigate to login
+    Get.offAllNamed(Routes.LOGIN);
+  }
+}
+
+// In AppwriteAuthService
+Future<Result<void, AppError>> deleteAccount() async {
+  try {
+    // Delete user document from 'users' collection
+    await _db.deleteDocument(databaseId: dbId, collectionId: 'users', documentId: userId);
+    // Delete associated chat sessions and messages
+    // Delete favorites
+    // Delete the Appwrite account itself
+    await _account.deleteSessions(); // Logout all sessions
+    return Result.success(null);
+  } catch (e) {
+    return Result.failure(UnknownError(message: e.toString()));
+  }
+}
+```
+
+### TODOs to Fix
+```dart
+// home_controller.dart:110 - Navigate to notifications
+// home_controller.dart:115 - Open location picker
+// home_controller.dart:120 - Navigate to settings
+// home_screen.dart:60 - Handle question tap
+// zodiac_picker_controller.dart:18 - Persist zodiac sign
+```
 
 ### About Us Screen
 ```
@@ -545,12 +734,14 @@ class LanguageController extends GetxController {
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
-| AboutScreen | 40 min | Info screen |
-| FeedbackScreen | 50 min | Form + validation |
-| Feedback submission | 35 min | Appwrite or email |
-| Rate Us flow | 25 min | Store redirect |
-| RequestFeatureScreen | 40 min | Form + submit |
-| Widget tests | 50 min | Settings tests |
+| Fix navigation TODOs | 25 min | Bug Fix |
+| Fix zodiac persistence TODO | 15 min | Bug Fix |
+| Implement Account Deletion (GDPR) | 35 min | Feature |
+| AboutScreen | 35 min | Info screen |
+| FeedbackScreen | 45 min | Form + validation |
+| Rate Us flow | 20 min | Store redirect |
+| Widget tests | 40 min | Settings tests |
+| Delete mock_astrologer.dart | 10 min | Cleanup |
 
 ### Rate Us Implementation
 ```dart
@@ -563,11 +754,15 @@ void openAppStore() {
 ```
 
 ### Acceptance Criteria
+- [ ] Navigation TODOs fixed (notifications, settings, location work)
+- [ ] Zodiac sign persists between sessions
+- [ ] mock_astrologer.dart deleted
+- [ ] Account deletion shows confirmation dialog
+- [ ] Account deletion removes all user data from Appwrite
+- [ ] Account deletion clears local storage and logs out
 - [ ] About screen shows app info
 - [ ] Feedback form validates input
-- [ ] Feedback submits successfully
 - [ ] Rate Us opens correct store
-- [ ] Request Feature submits
 - [ ] All widget tests pass
 
 ---

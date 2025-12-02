@@ -22,7 +22,7 @@ class AstrologerProfileView extends GetView<AstrologerProfileController> {
             right: 0,
             height: Get.height * 0.5,
             child: Obx(() {
-              final imageUrl = controller.astrologer.value?.imageUrl;
+              final imageUrl = controller.astrologer.value?.photoUrl;
               if (imageUrl == null) return const SizedBox();
               return Image.network(
                 imageUrl,

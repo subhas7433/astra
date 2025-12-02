@@ -13,13 +13,30 @@ import '../modules/astrologer_profile/bindings/astrologer_profile_binding.dart';
 import '../modules/astrologer_profile/views/astrologer_profile_view.dart';
 import '../modules/astrologer/bindings/astrologer_list_binding.dart';
 import '../modules/astrologer/views/astrologer_list_view.dart';
-import '../modules/astrologer_profile/bindings/astrologer_profile_binding.dart';
-import '../modules/astrologer_profile/views/astrologer_profile_view.dart';
 import '../modules/chat/bindings/chat_binding.dart';
 import '../modules/chat/views/chat_screen.dart';
 import '../modules/horoscope/bindings/zodiac_picker_binding.dart';
 import '../modules/horoscope/views/zodiac_picker_screen.dart';
+import '../modules/horoscope/bindings/horoscope_detail_binding.dart';
+import '../modules/horoscope/views/horoscope_detail_screen.dart';
 import '../modules/splash/splash_screen.dart';
+import '../modules/daily_content/bindings/today_bhagwan_binding.dart';
+import '../modules/daily_content/views/today_bhagwan_screen.dart';
+import '../modules/daily_content/bindings/today_mantra_binding.dart';
+import '../modules/daily_content/views/today_mantra_screen.dart';
+import '../modules/daily_content/bindings/numerology_binding.dart';
+import '../modules/daily_content/views/numerology_screen.dart';
+import '../modules/settings/bindings/settings_binding.dart';
+import '../modules/settings/controllers/language_controller.dart';
+import '../modules/settings/views/favorites_screen.dart';
+import '../modules/settings/views/language_screen.dart';
+import '../modules/settings/views/profile_edit_screen.dart';
+import '../modules/settings/views/settings_screen.dart';
+import '../modules/settings/views/about_screen.dart';
+import '../modules/settings/views/feedback_screen.dart';
+import '../modules/settings/views/privacy_screen.dart';
+import '../modules/settings/views/terms_screen.dart';
+import '../modules/settings/views/paywall_screen.dart';
 import 'app_routes.dart';
 
 /// GetX page definitions for app navigation.
@@ -131,63 +148,111 @@ class AppPages {
     /// Zodiac selection (stub)
 
 
-    /// Horoscope detail (stub)
+    /// Horoscope detail
     GetPage(
       name: AppRoutes.horoscopeDetail,
-      page: () => _buildStubPage('Horoscope Detail', Icons.auto_awesome),
+      page: () => const HoroscopeDetailScreen(),
+      binding: HoroscopeDetailBinding(),
       transition: Transition.rightToLeft,
       transitionDuration: transitionDuration,
     ),
 
     // ============ Daily Content ============
 
-    /// Today's Bhagwan (stub)
+    /// Today's Bhagwan
     GetPage(
       name: AppRoutes.todayBhagwan,
-      page: () => _buildStubPage("Today's Bhagwan", Icons.temple_hindu),
+      page: () => const TodayBhagwanScreen(),
+      binding: TodayBhagwanBinding(),
       transition: defaultTransition,
       transitionDuration: transitionDuration,
     ),
 
-    /// Today's Mantra (stub)
+    /// Today's Mantra
     GetPage(
       name: AppRoutes.todayMantra,
-      page: () => _buildStubPage("Today's Mantra", Icons.self_improvement),
+      page: () => const TodayMantraScreen(),
+      binding: TodayMantraBinding(),
       transition: defaultTransition,
       transitionDuration: transitionDuration,
     ),
 
-    /// Numerology (stub)
+    /// Numerology
     GetPage(
       name: AppRoutes.numerology,
-      page: () => _buildStubPage('Numerology', Icons.numbers),
+      page: () => const NumerologyScreen(),
+      binding: NumerologyBinding(),
       transition: defaultTransition,
       transitionDuration: transitionDuration,
     ),
 
     // ============ Settings ============
 
-    /// Settings main screen (stub)
+    /// Settings main screen
     GetPage(
       name: AppRoutes.settings,
-      page: () => _buildStubPage('Settings', Icons.settings),
+      page: () => const SettingsScreen(),
+      binding: SettingsBinding(),
       transition: Transition.rightToLeft,
       transitionDuration: transitionDuration,
     ),
 
-    /// Profile edit (stub)
-    GetPage(
-      name: AppRoutes.profileEdit,
-      page: () => _buildStubPage('Edit Profile', Icons.edit),
-      transition: Transition.rightToLeft,
-      transitionDuration: transitionDuration,
-    ),
-
-    /// Language selection (stub)
     GetPage(
       name: AppRoutes.language,
-      page: () => _buildStubPage('Language', Icons.language),
+      page: () => const LanguageScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => LanguageController());
+      }),
       transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    GetPage(
+      name: AppRoutes.profileEdit,
+      page: () => const ProfileEditScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    GetPage(
+      name: AppRoutes.favorites,
+      page: () => const FavoritesScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    GetPage(
+      name: AppRoutes.about,
+      page: () => const AboutScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    GetPage(
+      name: AppRoutes.feedback,
+      page: () => const FeedbackScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    GetPage(
+      name: AppRoutes.privacy,
+      page: () => const PrivacyScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    GetPage(
+      name: AppRoutes.terms,
+      page: () => const TermsScreen(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    GetPage(
+      name: AppRoutes.paywall,
+      page: () => const PaywallScreen(),
+      transition: Transition.downToUp, // Modal-like transition
       transitionDuration: transitionDuration,
     ),
     GetPage(

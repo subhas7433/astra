@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../controllers/home_controller.dart'; // Import to access MockAstrologer
+import '../../../core/constants/app_typography.dart';
+import '../../../data/models/astrologer_model.dart';
 import 'astrologer_card.dart';
-import 'category_chips.dart';
-import 'section_header.dart';
 
 class AstrologersSection extends StatelessWidget {
-  final List<MockAstrologer> astrologers;
-  final Function(String) onAstrologerTap;
-  final Function(String) onCategorySelected;
+  final List<AstrologerModel> astrologers;
   final String selectedCategory;
+  final Function(String) onCategorySelected;
   final VoidCallback onViewAll;
+  final Function(String) onAstrologerTap;
 
   const AstrologersSection({
     super.key,
     required this.astrologers,
-    required this.onAstrologerTap,
-    required this.onCategorySelected,
     required this.selectedCategory,
+    required this.onCategorySelected,
     required this.onViewAll,
+    required this.onAstrologerTap,
   });
 
   @override
@@ -26,21 +27,55 @@ class AstrologersSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
-          title: 'Astrologers',
-          onViewAll: onViewAll,
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingMd),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Top Astrologers',
+                style: AppTypography.h3,
+              ),
+              TextButton(
+                onPressed: onViewAll,
+                child: Text(
+                  'View All',
+                  style: AppTypography.button.copyWith(color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
         ),
         
-        // Category Chips
-        CategoryChips(
-          categories: const ['All', 'Career', 'Life', 'Love', 'Health'],
-          selectedCategory: selectedCategory,
-          onCategorySelected: onCategorySelected,
+        // Categories
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingMd),
+          child: Row(
+            children: ['All', 'Career', 'Life', 'Love', 'Health'].map((category) {
+              final isSelected = selectedCategory == category;
+              return Padding(
+                padding: const EdgeInsets.only(right: AppDimensions.paddingSm),
+                child: ChoiceChip(
+                  label: Text(category),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) onCategorySelected(category);
+                  },
+                  selectedColor: AppColors.primary.withOpacity(0.2),
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppColors.primary : Colors.grey[600],
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
-        
         const SizedBox(height: AppDimensions.md),
 
-        // Vertical List
+        // List
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -50,11 +85,7 @@ class AstrologersSection extends StatelessWidget {
           itemBuilder: (context, index) {
             final astrologer = astrologers[index];
             return AstrologerCard(
-              name: astrologer.name,
-              specialty: astrologer.specialty,
-              rating: astrologer.rating,
-              reviewCount: astrologer.reviewCount,
-              imageUrl: astrologer.imageUrl,
+              astrologer: astrologer,
               onTap: () => onAstrologerTap(astrologer.id),
             );
           },

@@ -20,10 +20,22 @@ Complete monetization system with AdMob ads, RevenueCat subscriptions, and premi
 - Receipt validation
 
 ### What We're NOT Building
-- Consumable IAP (one-time purchases)
+- Consumable IAP (one-time purchases) - Phase 2
 - Promotional codes system
 - Affiliate/referral system
 - Ad mediation (single network)
+
+### Additional Features Added (Gap Coverage)
+- Google Sign-In (FR-002)
+- Guest Mode with limited features (FR-004)
+- Content Moderation in AI prompts (FR-116-119)
+
+### Backend Integration (NEW)
+- Appwrite Function: ai-chat-response (OpenAI GPT-4)
+- Appwrite Function: subscription-webhook (RevenueCat)
+- IAIService interface with AppwriteAIService
+- Chat system real AI integration
+- Remaining TODO fixes (IAP, like, share, reset URL)
 
 ### Prerequisites (from Week 1-5)
 - [x] AdModal widget (Week 3)
@@ -33,24 +45,81 @@ Complete monetization system with AdMob ads, RevenueCat subscriptions, and premi
 
 ---
 
-## Session 1: AdMob Setup & Configuration (4 hours)
+## Session 1: AdMob Setup & AI Service Integration (4 hours)
 
 ### Objectives
-1. Configure AdMob account and app IDs
-2. Set up google_mobile_ads package
-3. Create AdService singleton
-4. Implement ad initialization
-5. Configure test ad units
+1. Create IAIService interface and implementations
+2. Deploy ai-chat-response Appwrite Function
+3. Configure AdMob account and app IDs
+4. Set up google_mobile_ads package
+5. Create AdService singleton
+6. Implement ad initialization
+7. Configure test ad units
 
 ### Key Deliverables
 
-| Deliverable | Description |
-|-------------|-------------|
-| AdMob configuration | App IDs, Ad unit IDs |
-| `AdService` | Singleton ad manager |
-| Initialization flow | Init on app start |
-| Test mode | Test ad units configured |
-| Platform setup | iOS/Android config files |
+| Deliverable | Description | Type |
+|-------------|-------------|------|
+| `IAIService` | Interface for AI responses | Backend |
+| `AppwriteAIService` | Calls Appwrite Function | Backend |
+| `MockAIService` | Template-based fallback | Backend |
+| `ai-chat-response` | Appwrite Function deployment | Backend |
+| AdMob configuration | App IDs, Ad unit IDs | Setup |
+| `AdService` | Singleton ad manager | Backend |
+| Initialization flow | Init on app start | Frontend |
+| Test mode | Test ad units configured | Setup |
+| Platform setup | iOS/Android config files | Setup |
+
+### AI Service Integration (NEW - Priority)
+| Task | Duration | Type |
+|------|----------|------|
+| Create IAIService interface | 15 min | Backend |
+| Create AppwriteAIService (calls function) | 30 min | Backend |
+| Create MockAIService (template fallback) | 15 min | Backend |
+| Deploy ai-chat-response Appwrite Function | 50 min | Backend |
+
+### Appwrite Function: ai-chat-response
+```javascript
+// Trigger: HTTP
+// Runtime: Node.js 18
+// Input: { userId, astrologerId, message, sessionId }
+// Logic:
+// 1. Fetch astrologer's aiPersonaPrompt from database
+// 2. Fetch last 10 messages for context
+// 3. Apply content moderation guidelines to system prompt (FR-116-119)
+// 4. Call OpenAI GPT-4 API
+// 5. Save messages to Appwrite
+// 6. Return response
+```
+
+### Content Moderation Guidelines (FR-116-119)
+```javascript
+// Add to system prompt in ai-chat-response function:
+const contentModerationRules = `
+IMPORTANT CONTENT MODERATION RULES:
+- NEVER provide medical advice or diagnose health conditions (FR-116)
+- NEVER provide specific financial investment advice (FR-117)
+- For harmful or distressing queries, respond with empathy and redirect to professional help (FR-118)
+- If user reports feeling suicidal or in crisis, provide helpline numbers
+- Keep responses spiritually uplifting and positive
+- Avoid making definitive predictions about death, serious illness, or major negative events
+`;
+
+// Append to aiPersonaPrompt before sending to OpenAI
+const systemPrompt = astrologer.aiPersonaPrompt + '\n\n' + contentModerationRules;
+```
+
+### IAIService Interface
+```dart
+abstract class IAIService {
+  Future<Result<String, AppError>> generateResponse({
+    required String userId,
+    required String astrologerId,
+    required String message,
+    required String sessionId,
+  });
+}
+```
 
 ### Module Structure
 ```
@@ -99,12 +168,15 @@ lib/app/modules/premium/
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
+| Create IAIService interface | 15 min | Backend |
+| Create AppwriteAIService | 30 min | Backend |
+| Create MockAIService | 15 min | Backend |
+| Deploy ai-chat-response Appwrite Function | 50 min | Backend |
 | AdMob account setup | 30 min | App + ad units |
-| Package configuration | 30 min | pubspec + imports |
-| Platform files | 40 min | Android + iOS config |
-| AdService class | 60 min | Singleton service |
-| Initialization flow | 40 min | Init on app start |
-| Test mode setup | 40 min | Test ad IDs |
+| Package configuration | 20 min | pubspec + imports |
+| Platform files | 30 min | Android + iOS config |
+| AdService class | 40 min | Singleton service |
+| Test mode setup | 20 min | Test ad IDs |
 
 ### AdService Structure
 ```dart
@@ -138,11 +210,13 @@ class AdService extends GetxService {
 ```
 
 ### Acceptance Criteria
+- [ ] IAIService interface created with Result pattern
+- [ ] AppwriteAIService calls Appwrite Function
+- [ ] MockAIService provides template fallback
+- [ ] ai-chat-response Appwrite Function deployed and tested
 - [ ] AdMob initializes without errors
 - [ ] Test ads load successfully
-- [ ] Ad unit IDs configured per environment
 - [ ] No ads shown to premium users
-- [ ] Proper error handling for ad failures
 
 ---
 
@@ -245,24 +319,33 @@ class AdService {
 
 ---
 
-## Session 3: Rewarded Ads Integration (4 hours)
+## Session 3: Rewarded Ads + Chat Backend Integration (4 hours)
 
 ### Objectives
-1. Implement rewarded ad loading
-2. Create reward callback system
-3. Integrate with chat free credits
-4. Build reward confirmation UI
-5. Handle reward validation
+1. Integrate ChatRepository in chat_controller
+2. Wire AI service to chat
+3. Implement rewarded ad loading
+4. Create reward callback system
+5. Integrate with chat free credits
+6. Build reward confirmation UI
+7. Handle reward validation
 
 ### Key Deliverables
 
-| Deliverable | Description |
-|-------------|-------------|
-| Rewarded ad loading | Preload on demand |
-| Reward callbacks | Credit system integration |
-| AdModal integration | "Watch Ad" button flow |
-| Reward confirmation | Success toast/animation |
-| Retry on failure | Reload if ad fails |
+| Deliverable | Description | Type |
+|-------------|-------------|------|
+| Chat backend integration | Wire ChatRepository + AI | Backend |
+| Rewarded ad loading | Preload on demand | Frontend |
+| Reward callbacks | Credit system integration | Frontend |
+| AdModal integration | "Watch Ad" button flow | Frontend |
+| Reward confirmation | Success toast/animation | Frontend |
+| Retry on failure | Reload if ad fails | Frontend |
+
+### Chat Backend Integration (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Integrate ChatRepository in chat_controller | 30 min | Backend |
+| Wire AI service to chat | 25 min | Backend |
 
 ### Rewarded Ad Flow
 ```
@@ -279,12 +362,13 @@ class AdService {
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
-| Rewarded ad loading | 45 min | Preload logic |
-| Reward callback | 40 min | onReward handler |
-| Chat credit integration | 45 min | Add credits on reward |
-| Success animation | 35 min | Reward received UI |
-| Failure handling | 30 min | Retry + error UI |
-| Ad preloading | 25 min | Load next ad |
+| Integrate ChatRepository in chat_controller | 30 min | Backend |
+| Wire AI service to chat | 25 min | Backend |
+| Rewarded ad loading | 40 min | Preload logic |
+| Reward callback | 35 min | onReward handler |
+| Chat credit integration | 40 min | Add credits on reward |
+| Success animation | 30 min | Reward received UI |
+| Ad preloading | 20 min | Load next ad |
 
 ### Reward Integration with Chat
 ```dart
@@ -318,33 +402,47 @@ void _showRewardSuccess() {
 ```
 
 ### Acceptance Criteria
+- [ ] ChatRepository integrated in chat_controller
+- [ ] AI service wired to chat (real responses)
 - [ ] Rewarded ad plays fully
 - [ ] Credits added only on completion
 - [ ] Early close gives no reward
 - [ ] Success feedback shows
 - [ ] Next ad preloads automatically
-- [ ] Fallback if no ad available
 
 ---
 
-## Session 4: RevenueCat Setup & Subscriptions (4 hours)
+## Session 4: RevenueCat Setup & IAP TODO Fix (4 hours)
 
 ### Objectives
-1. Configure RevenueCat account
-2. Set up purchases_flutter package
-3. Create SubscriptionService
-4. Define subscription tiers
-5. Implement purchase flow
+1. Fix IAP TODO in chat_controller
+2. Configure RevenueCat account
+3. Set up purchases_flutter package
+4. Create SubscriptionService
+5. Define subscription tiers
+6. Implement purchase flow
 
 ### Key Deliverables
 
-| Deliverable | Description |
-|-------------|-------------|
-| RevenueCat config | Project + API keys |
-| `SubscriptionService` | Purchase management |
-| Subscription tiers | Basic, Pro, Premium |
-| Purchase flow | Buy subscription |
-| Restore purchases | Restore on new device |
+| Deliverable | Description | Type |
+|-------------|-------------|------|
+| IAP TODO fix | Fix chat_controller:146 | Bug Fix |
+| RevenueCat config | Project + API keys | Setup |
+| `SubscriptionService` | Purchase management | Backend |
+| Subscription tiers | Basic, Pro, Premium | Backend |
+| Purchase flow | Buy subscription | Frontend |
+| Restore purchases | Restore on new device | Frontend |
+
+### Bug Fix (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Fix IAP TODO in chat_controller | 25 min | Bug Fix |
+
+```dart
+// chat_controller.dart:146
+// TODO: Implement IAP
+// Fix: Wire SubscriptionService.purchasePackage() when user taps "Go Premium"
+```
 
 ### Subscription Tiers
 ```dart
@@ -385,11 +483,12 @@ class SubscriptionTiers {
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
-| RevenueCat setup | 45 min | Account + products |
-| Package configuration | 30 min | purchases_flutter |
-| SubscriptionService | 60 min | Full service |
-| Purchase flow | 45 min | Buy subscription |
-| Restore purchases | 30 min | Restore flow |
+| Fix IAP TODO in chat_controller | 25 min | Bug Fix |
+| RevenueCat setup | 40 min | Account + products |
+| Package configuration | 25 min | purchases_flutter |
+| SubscriptionService | 55 min | Full service |
+| Purchase flow | 40 min | Buy subscription |
+| Restore purchases | 25 min | Restore flow |
 | Error handling | 30 min | Payment failures |
 
 ### SubscriptionService Structure
@@ -415,33 +514,53 @@ class SubscriptionService extends GetxService {
 ```
 
 ### Acceptance Criteria
+- [ ] IAP TODO fixed in chat_controller
 - [ ] RevenueCat SDK initializes
 - [ ] Offerings fetch successfully
 - [ ] Purchase completes on sandbox
 - [ ] Subscription status updates
 - [ ] Restore works on new device
-- [ ] Receipt validation works
 
 ---
 
-## Session 5: Paywall Screen & Premium Features (4 hours)
+## Session 5: Paywall Screen & Remaining TODOs (4 hours)
 
 ### Objectives
-1. Build Paywall/Subscription screen
-2. Create feature comparison table
-3. Implement subscription cards
-4. Add premium feature gating
-5. Handle subscription state changes
+1. Fix like persist TODO in horoscope_detail_controller
+2. Fix sharing TODO (use share_plus)
+3. Build Paywall/Subscription screen
+4. Create feature comparison table
+5. Implement subscription cards
+6. Add premium feature gating
+7. Handle subscription state changes
 
 ### Key Deliverables
 
-| Deliverable | Description |
-|-------------|-------------|
-| `PaywallScreen` | Subscription selection |
-| `SubscriptionCard` | Tier display card |
-| `FeatureComparison` | Feature table |
-| Feature gating | Check before access |
-| `PremiumService` | Centralized gating |
+| Deliverable | Description | Type |
+|-------------|-------------|------|
+| Like persist fix | Fix horoscope_detail_controller:83 | Bug Fix |
+| Sharing fix | Fix horoscope_detail_controller:89 | Bug Fix |
+| `PaywallScreen` | Subscription selection | Frontend |
+| `SubscriptionCard` | Tier display card | Frontend |
+| `FeatureComparison` | Feature table | Frontend |
+| Feature gating | Check before access | Frontend |
+| `PremiumService` | Centralized gating | Backend |
+
+### Bug Fixes (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Fix like persist TODO | 20 min | Bug Fix |
+| Fix sharing TODO (use share_plus) | 25 min | Bug Fix |
+
+```dart
+// horoscope_detail_controller.dart:83
+// TODO: Persist like state
+// Fix: Use SharedPreferences to save liked horoscopes
+
+// horoscope_detail_controller.dart:89
+// TODO: Implement sharing
+// Fix: Use share_plus package to share horoscope content
+```
 
 ### Paywall Screen Layout
 ```
@@ -485,12 +604,13 @@ class SubscriptionService extends GetxService {
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
-| PaywallScreen | 60 min | Full screen |
-| SubscriptionCard | 45 min | Tier card widget |
-| FeatureComparison | 40 min | Comparison table |
-| PremiumService | 35 min | Feature gating |
-| Gating integration | 40 min | Check in features |
-| Success screen | 30 min | Purchase success |
+| Fix like persist TODO | 20 min | Bug Fix |
+| Fix sharing TODO | 25 min | Bug Fix |
+| PaywallScreen | 55 min | Full screen |
+| SubscriptionCard | 40 min | Tier card widget |
+| FeatureComparison | 35 min | Comparison table |
+| PremiumService | 30 min | Feature gating |
+| Gating integration | 35 min | Check in features |
 
 ### Premium Feature Gating
 ```dart
@@ -553,33 +673,165 @@ Obx(() => PremiumService.to.canAccessFeature(PremiumFeature.noAds)
 ```
 
 ### Acceptance Criteria
+- [ ] Like state persists between sessions
+- [ ] Sharing works with share_plus
 - [ ] Paywall shows all tiers
 - [ ] Popular tier highlighted
-- [ ] Purchase flow completes
 - [ ] Features properly gated
 - [ ] Ads hidden for subscribers
-- [ ] Restore purchases works
 
 ---
 
-## Session 6: Testing & Analytics (4 hours)
+## Session 6: Testing, Auth Enhancements & Final Cleanup (4 hours)
 
 ### Objectives
-1. Test all purchase flows (sandbox)
-2. Implement subscription analytics
-3. Add A/B testing hooks
-4. Handle edge cases
-5. Final integration testing
+1. Fix reset URL TODO in appwrite_auth_service
+2. Implement Google Sign-In (FR-002)
+3. Implement Guest Mode (FR-004)
+4. Verify all MockAstrologer references removed
+5. Deploy subscription-webhook Appwrite Function
+6. Test all purchase flows (sandbox)
+7. Implement subscription analytics
+8. Handle edge cases
+9. Final integration testing
 
 ### Key Deliverables
 
-| Deliverable | Description |
-|-------------|-------------|
-| Sandbox testing | All purchase flows |
-| Analytics events | Purchase tracking |
-| Edge case handling | Failures, cancels |
-| Receipt validation | Server-side check |
-| Widget tests | Premium components |
+| Deliverable | Description | Type |
+|-------------|-------------|------|
+| Reset URL fix | Fix appwrite_auth_service:232 | Bug Fix |
+| Google Sign-In | OAuth integration (FR-002) | Feature |
+| Guest Mode | Limited feature access (FR-004) | Feature |
+| MockAstrologer verification | Confirm all removed | Cleanup |
+| `subscription-webhook` | Appwrite Function deployment | Backend |
+| Sandbox testing | All purchase flows | Testing |
+| Analytics events | Purchase tracking | Backend |
+| Edge case handling | Failures, cancels | Testing |
+| Widget tests | Premium components | Testing |
+
+### Final Cleanup & Auth Enhancements (NEW)
+| Task | Duration | Type |
+|------|----------|------|
+| Fix reset URL TODO in appwrite_auth_service | 10 min | Bug Fix |
+| Implement Google Sign-In | 45 min | Feature |
+| Implement Guest Mode | 35 min | Feature |
+| Verify all MockAstrologer references removed | 15 min | Cleanup |
+| Deploy subscription-webhook Appwrite Function | 30 min | Backend |
+
+### Google Sign-In Implementation (FR-002)
+```dart
+// 1. Add google_sign_in package to pubspec.yaml
+// dependencies:
+//   google_sign_in: ^6.2.1
+
+// 2. Configure Firebase/Google Cloud Console
+// - Create OAuth 2.0 credentials
+// - Add SHA-1 fingerprint for Android
+// - Configure iOS URL scheme
+
+// 3. In AppwriteAuthService
+Future<Result<UserModel, AppError>> signInWithGoogle() async {
+  try {
+    final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      return Result.failure(AuthError(message: 'Google sign-in cancelled'));
+    }
+
+    final googleAuth = await googleUser.authentication;
+
+    // Create Appwrite OAuth2 session
+    await _account.createOAuth2Session(
+      provider: 'google',
+      success: 'https://your-app.com/auth/callback',
+      failure: 'https://your-app.com/auth/failure',
+    );
+
+    // Fetch or create user document
+    final user = await _getOrCreateUserDocument(googleUser);
+    return Result.success(user);
+  } catch (e) {
+    return Result.failure(AuthError(message: e.toString()));
+  }
+}
+```
+
+### Guest Mode Implementation (FR-004)
+```dart
+// Guest mode allows limited app access without authentication
+// Limitations:
+// - Cannot save favorites
+// - Cannot access chat history
+// - Limited to 3 chat messages total (not per day)
+// - Cannot make purchases
+// - Prompted to register after limitations hit
+
+class GuestService extends GetxService {
+  static GuestService get to => Get.find();
+
+  final isGuest = false.obs;
+  final guestChatCount = 0.obs;
+  static const maxGuestChats = 3;
+
+  void enterGuestMode() {
+    isGuest.value = true;
+    guestChatCount.value = 0;
+    // Navigate to home with limited access
+    Get.offAllNamed(Routes.HOME);
+  }
+
+  bool canGuestChat() {
+    if (!isGuest.value) return true;
+    return guestChatCount.value < maxGuestChats;
+  }
+
+  void incrementGuestChat() {
+    guestChatCount.value++;
+    if (guestChatCount.value >= maxGuestChats) {
+      _showRegisterPrompt();
+    }
+  }
+
+  void _showRegisterPrompt() {
+    Get.dialog(
+      AlertDialog(
+        title: Text('Create an Account'),
+        content: Text('Sign up to continue chatting and unlock all features!'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: Text('Maybe Later')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              Get.toNamed(Routes.REGISTER);
+            },
+            child: Text('Sign Up'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// In LoginScreen - add "Continue as Guest" button
+TextButton(
+  onPressed: () => GuestService.to.enterGuestMode(),
+  child: Text('Continue as Guest'),
+)
+```
+
+```dart
+// appwrite_auth_service.dart:232
+// TODO: Configure reset URL
+// Fix: Set proper reset URL for password reset emails
+```
+
+### Appwrite Function: subscription-webhook
+```javascript
+// Trigger: HTTP (RevenueCat webhook)
+// Runtime: Node.js 18
+// Purpose: Sync subscription status to Appwrite
+// Events: INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION
+```
 
 ### Analytics Events
 ```dart
@@ -598,12 +850,15 @@ class MonetizationAnalytics {
 ### Tasks Breakdown
 | Task | Duration | Output |
 |------|----------|--------|
-| Sandbox testing | 60 min | All flows verified |
-| Analytics setup | 45 min | Event tracking |
-| Edge case handling | 40 min | Error states |
-| Receipt validation | 35 min | Server check |
-| Widget tests | 50 min | Component tests |
-| Integration tests | 50 min | Full flow tests |
+| Fix reset URL TODO | 10 min | Bug Fix |
+| Implement Google Sign-In | 45 min | Feature |
+| Implement Guest Mode | 35 min | Feature |
+| Verify all mocks removed | 10 min | Cleanup |
+| Deploy subscription-webhook | 25 min | Backend |
+| Sandbox testing | 40 min | All flows verified |
+| Analytics setup | 30 min | Event tracking |
+| Edge case handling | 25 min | Error states |
+| Widget tests | 30 min | Component tests |
 
 ### Edge Cases to Handle
 ```dart
@@ -644,12 +899,17 @@ Future<bool> purchasePackage(Package package) async {
 ```
 
 ### Acceptance Criteria
+- [ ] Reset URL configured in appwrite_auth_service
+- [ ] Google Sign-In works on both iOS and Android
+- [ ] Guest Mode allows limited browsing without login
+- [ ] Guest users see registration prompt after 3 chats
+- [ ] Guest users cannot save favorites or access history
+- [ ] No MockAstrologer references remaining
+- [ ] subscription-webhook Appwrite Function deployed
 - [ ] All purchase flows work in sandbox
 - [ ] Analytics events fire correctly
 - [ ] Edge cases handled gracefully
-- [ ] No crashes on payment errors
 - [ ] Widget tests pass
-- [ ] Integration tests pass
 
 ---
 

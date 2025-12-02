@@ -4,21 +4,15 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../widgets/display/app_avatar.dart';
 
+import '../../../data/models/astrologer_model.dart';
+
 class AstrologerCard extends StatelessWidget {
-  final String name;
-  final String specialty;
-  final double rating;
-  final int reviewCount;
-  final String imageUrl;
+  final AstrologerModel astrologer;
   final VoidCallback onTap;
 
   const AstrologerCard({
     super.key,
-    required this.name,
-    required this.specialty,
-    required this.rating,
-    required this.reviewCount,
-    required this.imageUrl,
+    required this.astrologer,
     required this.onTap,
   });
 
@@ -36,8 +30,8 @@ class AstrologerCard extends StatelessWidget {
           children: [
             // Avatar
             AppAvatar(
-              imageUrl: imageUrl,
-              size: AppAvatarSize.lg, // Using enum instead of number
+              imageUrl: astrologer.photoUrl,
+              size: AppAvatarSize.lg,
               showBorder: true,
               borderColor: Colors.white,
             ),
@@ -49,18 +43,18 @@ class AstrologerCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    astrologer.name,
                     style: AppTypography.h3.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 18, // Larger font
+                      fontSize: 18,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    specialty,
+                    astrologer.specialization,
                     style: AppTypography.body2.copyWith(
                       color: Colors.white.withOpacity(0.9),
                       fontSize: 14,
@@ -68,13 +62,13 @@ class AstrologerCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8), // More spacing
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(Icons.star, color: Colors.yellow, size: 18),
                       const SizedBox(width: 4),
                       Text(
-                        '$rating ($reviewCount+ reviews)',
+                        '${astrologer.formattedRating} (${astrologer.formattedReviewCount} reviews)',
                         style: AppTypography.caption.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,

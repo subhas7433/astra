@@ -14,7 +14,10 @@ class TodayMantraCard extends StatefulWidget {
     super.key,
     required this.mantra,
     this.title = 'Today Mantra',
+    this.onViewDetails,
   });
+
+  final VoidCallback? onViewDetails;
 
   @override
   State<TodayMantraCard> createState() => _TodayMantraCardState();
@@ -149,6 +152,19 @@ class _TodayMantraCardState extends State<TodayMantraCard> {
                     ),
                   ],
                 ),
+                if (widget.onViewDetails != null) ...[
+                  const SizedBox(height: AppDimensions.lg),
+                  GestureDetector(
+                    onTap: widget.onViewDetails,
+                    child: Text(
+                      'View Full Details',
+                      style: AppTypography.button.copyWith(
+                        color: Colors.white,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

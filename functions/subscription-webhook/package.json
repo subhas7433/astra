@@ -1,0 +1,9 @@
+{
+  "name": "subscription-webhook",
+  "version": "1.0.0",
+  "description": "RevenueCat webhook handler",
+  "main": "src/index.js",
+  "dependencies": {
+    "node-appwrite": "^11.0.0"
+  }
+}

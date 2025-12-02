@@ -82,11 +82,7 @@ class AstrologerListView extends GetView<AstrologerListController> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppDimensions.paddingMd),
                       child: AstrologerCard(
-                        name: astrologer.name,
-                        specialty: astrologer.specialty,
-                        rating: astrologer.rating,
-                        reviewCount: astrologer.reviewCount,
-                        imageUrl: astrologer.imageUrl,
+                        astrologer: astrologer,
                         onTap: () => Get.toNamed(AppRoutes.astrologerProfileWithId(astrologer.id)),
                       ),
                     );

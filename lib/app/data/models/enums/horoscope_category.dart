@@ -2,7 +2,8 @@
 enum HoroscopeCategory {
   love,
   career,
-  health;
+  health,
+  general;
 
   /// Convert to string for Appwrite storage.
   String get value => name;
@@ -13,6 +14,7 @@ enum HoroscopeCategory {
       HoroscopeCategory.love => 'Love & Relationships',
       HoroscopeCategory.career => 'Career & Finance',
       HoroscopeCategory.health => 'Health & Wellness',
+      HoroscopeCategory.general => 'General Overview',
     };
   }
 
@@ -22,6 +24,7 @@ enum HoroscopeCategory {
       HoroscopeCategory.love => 'Prem & Sambandh',
       HoroscopeCategory.career => 'Karya & Vitta',
       HoroscopeCategory.health => 'Swasthya',
+      HoroscopeCategory.general => 'Samanya',
     };
   }
 
@@ -31,6 +34,7 @@ enum HoroscopeCategory {
       HoroscopeCategory.love => 'heart',
       HoroscopeCategory.career => 'briefcase',
       HoroscopeCategory.health => 'person',
+      HoroscopeCategory.general => 'star',
     };
   }
 

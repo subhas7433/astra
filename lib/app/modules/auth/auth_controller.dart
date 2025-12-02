@@ -109,6 +109,23 @@ class AuthController extends BaseController {
     return true;
   }
 
+  /// Attempt to sign in with Google.
+  Future<void> signInWithGoogle() async {
+    AppLogger.info('Attempting Google Sign-In...', tag: _tag);
+
+    await executeWithState(
+      operation: () => _authService.signInWithGoogle(),
+      onSuccess: (userId) {
+        AppLogger.info('Google Sign-In successful: $userId', tag: _tag);
+        _clearForms();
+        Get.offAllNamed(AppRoutes.home);
+      },
+      onError: (error) {
+        AppLogger.warning('Google Sign-In failed: ${error.message}', tag: _tag);
+      },
+    );
+  }
+
   // ============ Registration ============
 
   /// Attempt to register a new user.

@@ -34,10 +34,11 @@ class ChatScreen extends GetView<ChatController> {
                   
                   final msg = controller.messages[index];
                   return MessageBubble(
-                    message: msg['message'],
-                    isUser: msg['isUser'],
-                    time: msg['time'],
-                    avatarUrl: msg['isUser'] ? null : controller.astrologer.value?.imageUrl,
+                    message: msg.content,
+                    isUser: msg.isUserMessage,
+                    time: msg.formattedTime,
+                    avatarUrl: msg.isUserMessage ? null : 
+                    controller.astrologer.value?.photoUrl,
                   );
                 },
               );

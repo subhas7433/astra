@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:appwrite/appwrite.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../result/result.dart';
 import '../../result/app_error.dart';
@@ -147,6 +148,47 @@ class AppwriteAuthService extends GetxService implements IAuthService {
   }
 
   @override
+  Future<Result<String, AppError>> signInWithGoogle() async {
+    AppLogger.info('Initiating Google Sign-In', tag: _tag);
+
+    try {
+      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final googleUser = await googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        return Result.failure(AuthError(message: 'Google sign-in cancelled'));
+      }
+
+      AppLogger.info('Google user signed in: ${googleUser.email}', tag: _tag);
+
+      // Create Appwrite OAuth2 session
+      // Note: This flow might need adjustment depending on specific Appwrite + Flutter setup
+      // For mobile, we often use createOAuth2Session which opens a webview
+      // But since we are using google_sign_in package, we might want to use createSession with token if supported
+      // Or standard OAuth2 flow. 
+      // The standard Appwrite Flutter OAuth2 flow:
+      await _account.createOAuth2Session(
+        provider: 'google',
+      );
+
+      // After webview closes, we check session
+      final user = await _account.get();
+      _updateAuthState(user.$id);
+      
+      return Result.success(user.$id);
+    } on AppwriteException catch (e, stack) {
+      return Result.failure(_mapAppwriteException(e, stack));
+    } catch (e, stack) {
+      AppLogger.error('Google Sign-In failed', error: e, stackTrace: stack, tag: _tag);
+      return Result.failure(UnknownError(
+        message: 'Google Sign-In failed: ${e.toString()}',
+        originalError: e,
+        stackTrace: stack,
+      ));
+    }
+  }
+
+  @override
   Future<Result<void, AppError>> logout() async {
     AppLogger.info('Logging out user', tag: _tag);
 
@@ -229,7 +271,7 @@ class AppwriteAuthService extends GetxService implements IAuthService {
     try {
       await _account.createRecovery(
         email: email,
-        url: 'https://astrogpt.app/reset-password', // TODO: Configure actual URL
+        url: 'https://astra-app.com/auth/reset-password',
       );
 
       AppLogger.info('Password recovery email sent', tag: _tag);

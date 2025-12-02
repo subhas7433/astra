@@ -360,14 +360,14 @@ void main() {
         expect(noHindi.hasHindiPrediction, isFalse);
       });
 
-      test('energyPercentage formats correctly', () {
-        expect(testHoroscope.energyPercentage, '75%');
+      test('energyPercentageStr formats correctly', () {
+        expect(testHoroscope.energyPercentageStr, '75%');
 
         final low = testHoroscope.copyWith(energyLevel: 10);
-        expect(low.energyPercentage, '10%');
+        expect(low.energyPercentageStr, '10%');
 
         final max = testHoroscope.copyWith(energyLevel: 100);
-        expect(max.energyPercentage, '100%');
+        expect(max.energyPercentageStr, '100%');
       });
 
       test('energyDescription returns correct level', () {

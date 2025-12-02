@@ -53,6 +53,13 @@ abstract interface class IAuthService {
     required String password,
   });
 
+  /// Sign in with Google
+  ///
+  /// Returns the user ID on success, or:
+  /// - [AuthError] if sign-in cancelled or failed
+  /// - [NetworkError] if connection failed
+  Future<Result<String, AppError>> signInWithGoogle();
+
   /// Logout the current user
   ///
   /// Returns void on success, or:

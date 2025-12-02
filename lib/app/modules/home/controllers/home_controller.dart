@@ -1,34 +1,20 @@
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
 
-// Temporary inline model until import issues are resolved
-class MockAstrologer {
-  final String id;
-  final String name;
-  final String specialty;
-  final double rating;
-  final int reviewCount;
-  final String imageUrl;
-
-  MockAstrologer({
-    required this.id,
-    required this.name,
-    required this.specialty,
-    required this.rating,
-    required this.reviewCount,
-    required this.imageUrl,
-  });
-}
+import '../../../data/models/astrologer_model.dart';
+import '../../../data/repositories/astrologer_repository.dart';
 
 class HomeController extends GetxController {
+  final AstrologerRepository _repository = Get.find<AstrologerRepository>();
+
   final isLoading = true.obs;
   final currentLocation = 'New Delhi, India'.obs;
   final notificationCount = 2.obs;
 
   final selectedCategory = 'All'.obs;
   final categories = ['All', 'Career', 'Life', 'Love', 'Health'].obs;
-  final allAstrologers = <MockAstrologer>[].obs; // Store all loaded
-  final astrologers = <MockAstrologer>[].obs; // Displayed list
+  final allAstrologers = <AstrologerModel>[].obs; // Store all loaded
+  final astrologers = <AstrologerModel>[].obs; // Displayed list
   final isMoreLoading = false.obs;
   int _page = 1;
   final int _limit = 10;
@@ -42,20 +28,19 @@ class HomeController extends GetxController {
   Future<void> fetchHomeData() async {
     isLoading.value = true;
     _page = 1;
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 2));
     
-    // Mock Data Generation
-    allAstrologers.value = List.generate(20, (index) => MockAstrologer(
-      id: '$index',
-      name: 'Astrologer ${index + 1}',
-      specialty: index % 2 == 0 ? 'Vedic, Numerology' : 'Tarot, Career',
-      rating: 4.5 + (index % 5) * 0.1,
-      reviewCount: 100 + index * 10,
-      imageUrl: 'https://randomuser.me/api/portraits/${index % 2 == 0 ? "women" : "men"}/$index.jpg',
-    ));
+    final result = await _repository.getAstrologers(limit: _limit, offset: 0);
+
+    result.fold(
+      onSuccess: (success) {
+        allAstrologers.value = success;
+        _applyFilters();
+      },
+      onFailure: (failure) {
+        Get.snackbar('Error', failure.message);
+      },
+    );
     
-    _applyFilters();
     isLoading.value = false;
   }
 
@@ -64,10 +49,10 @@ class HomeController extends GetxController {
       astrologers.value = allAstrologers;
     } else {
       astrologers.value = allAstrologers.where((a) {
-        // Simple mock filtering logic
-        if (selectedCategory.value == 'Career') return a.specialty.contains('Career');
-        if (selectedCategory.value == 'Love') return a.specialty.contains('Tarot'); // Mock mapping
-        return true;
+        // Filter by specialization or category
+        // This is a simple string match for now
+        return a.specialization.contains(selectedCategory.value) || 
+               a.expertiseTags.any((tag) => tag.contains(selectedCategory.value));
       }).toList();
     }
   }
@@ -80,20 +65,21 @@ class HomeController extends GetxController {
   Future<void> loadMoreAstrologers() async {
     if (isMoreLoading.value) return;
     isMoreLoading.value = true;
-    await Future.delayed(const Duration(seconds: 1));
     
-    // Add more mock data
-    final moreAstrologers = List.generate(5, (index) => MockAstrologer(
-      id: 'more_$index',
-      name: 'New Astrologer $index',
-      specialty: 'Vedic',
-      rating: 4.0,
-      reviewCount: 50,
-      imageUrl: 'https://randomuser.me/api/portraits/women/${index + 50}.jpg',
-    ));
+    // Simulate pagination by fetching more mock data
+    // In real app, use offset based on current list length
+    final result = await _repository.getAstrologers(limit: 5, offset: allAstrologers.length);
     
-    allAstrologers.addAll(moreAstrologers);
-    _applyFilters();
+    result.fold(
+      onSuccess: (success) {
+        allAstrologers.addAll(success);
+        _applyFilters();
+      },
+      onFailure: (failure) {
+        Get.snackbar('Error', failure.message);
+      },
+    );
+
     isMoreLoading.value = false;
   }
 
@@ -117,7 +103,6 @@ class HomeController extends GetxController {
   }
   
   void onSettingsTap() {
-    // TODO: Navigate to settings
-    print('Settings tapped');
+    Get.toNamed(AppRoutes.settings);
   }
 }

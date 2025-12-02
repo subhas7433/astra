@@ -11,6 +11,17 @@
 - Run `find . -name "._*" -type f -delete` before commits to remove macOS metadata
 - These `._*` files break Dart test runner and analyzer
 
+### Flutter/AGP Build Output Location (AGP 8.9+)
+- **Problem**: After `flutter clean`, build fails with "Gradle build failed to produce an .apk file"
+- **Root Cause**: AGP 8.9.1 outputs APK to `android/app/build/outputs/flutter-apk/` but Flutter expects `build/app/outputs/flutter-apk/`
+- **Fix**: Create symlink to bridge the paths:
+  ```bash
+  mkdir -p build/app/outputs
+  ln -sf $(pwd)/android/app/build/outputs/flutter-apk build/app/outputs/flutter-apk
+  ```
+- **Note**: Must recreate symlink after every `flutter clean`
+- **Alternative**: Add to post-clean script or investigate Gradle `buildDir` configuration
+
 ### Testing
 - Always update tests when refactoring app class names
 - Use `dotenv.testLoad(fileInput: '...')` in tests to mock environment
@@ -269,4 +280,4 @@ void main() {
 ---
 
 ## Last Updated
-November 26, 2025 - Session 1 Complete
+November 30, 2025 - Added Flutter/AGP 8.9+ build output location fix

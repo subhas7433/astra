@@ -438,24 +438,61 @@ class HoroscopeCache {
 
 ---
 
-## Session 6: Polish & Testing (4 hours)
+## Session 6: Polish, Testing + Backend Integration (4 hours)
 
 ### Objectives
-1. Add animations and transitions
-2. Implement pull-to-refresh
-3. Add analytics events
-4. Write widget tests
-5. Final integration testing
+1. Fix AppError.unknown bug in horoscope_repository.dart
+2. Create AstrologerRepository for real Appwrite data
+3. Replace MockAstrologer in home_controller.dart
+4. Add animations and transitions
+5. Implement pull-to-refresh
+6. Write widget tests
 
 ### Key Deliverables
 
-| Deliverable | Description |
-|-------------|-------------|
-| Animations | Smooth transitions |
-| Pull-to-refresh | Refresh horoscope |
-| Analytics | Track views, shares |
-| Widget tests | All horoscope widgets |
-| Integration test | Full flow test |
+| Deliverable | Description | Type |
+|-------------|-------------|------|
+| Bug fix | Fix AppError.unknown in horoscope_repository | Backend |
+| `AstrologerRepository` | Real Appwrite queries for astrologers | Backend |
+| MockAstrologer removal | Replace in home_controller | Refactor |
+| Animations | Smooth transitions | Frontend |
+| Pull-to-refresh | Refresh horoscope | Frontend |
+| Widget tests | All horoscope widgets | Testing |
+
+### Tasks Breakdown
+| Task | Duration | Type |
+|------|----------|------|
+| Fix AppError.unknown bug | 15 min | Bug Fix |
+| Create AstrologerRepository | 45 min | Backend |
+| Replace MockAstrologer in home_controller | 30 min | Refactor |
+| Card animations | 40 min | Frontend |
+| Progress animations | 35 min | Frontend |
+| Pull-to-refresh | 25 min | Frontend |
+| Analytics events | 35 min | Frontend |
+| Widget tests | 35 min | Testing |
+
+### Bug Fix: AppError.unknown
+```dart
+// File: lib/app/data/repositories/horoscope_repository.dart:47
+// BEFORE: return Result.failure(AppError.unknown(message: e.toString()));
+// AFTER:  return Result.failure(UnknownError(message: e.toString()));
+```
+
+### AstrologerRepository Structure
+```dart
+class AstrologerRepository {
+  final IDatabaseService _db;
+
+  Future<Result<List<AstrologerModel>, AppError>> getAstrologers({
+    AstrologerCategory? category,
+    int limit = 20,
+    int offset = 0,
+  });
+
+  Future<Result<AstrologerModel, AppError>> getAstrologerById(String id);
+  Future<Result<List<AstrologerModel>, AppError>> searchAstrologers(String query);
+}
+```
 
 ### Animations to Add
 ```dart
@@ -477,16 +514,6 @@ class HoroscopeCache {
 // - Staggered delay per section
 ```
 
-### Tasks Breakdown
-| Task | Duration | Output |
-|------|----------|--------|
-| Card animations | 40 min | Selection feedback |
-| Progress animations | 35 min | Animated fill |
-| Pull-to-refresh | 25 min | Refresh indicator |
-| Analytics events | 35 min | Tracking setup |
-| Widget tests | 60 min | Component tests |
-| Integration test | 45 min | Full flow |
-
 ### Analytics Events
 ```dart
 // Track these events:
@@ -498,12 +525,12 @@ class HoroscopeCache {
 ```
 
 ### Acceptance Criteria
+- [ ] AppError.unknown bug fixed
+- [ ] AstrologerRepository created and tested
+- [ ] home_controller uses AstrologerModel (not MockAstrologer)
 - [ ] Animations feel smooth and natural
 - [ ] Pull-to-refresh works correctly
-- [ ] Analytics events fire correctly
 - [ ] Widget tests pass (>80% coverage)
-- [ ] Integration test passes
-- [ ] No jank during scrolling
 
 ---
 

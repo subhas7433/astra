@@ -30,7 +30,7 @@ abstract class AppRoutes {
   static const String astrologerProfile = '/astrologer/:id';
 
   /// Chat with astrologer (parameterized)
-  static const chat = '/chat';
+  static const chat = '/chat/:astrologerId';
   static const horoscope = '/horoscope';
 
   /// Astrologer list screen
@@ -55,13 +55,15 @@ abstract class AppRoutes {
 
   // ============ Settings ============
   /// Settings main screen
-  static const String settings = '/settings';
-
-  /// Profile edit screen
-  static const String profileEdit = '/profile-edit';
-
-  /// Language selection screen
-  static const String language = '/language';
+  static const settings = '/settings';
+  static const language = '/settings/language';
+  static const profileEdit = '/settings/profile-edit';
+  static const favorites = '/settings/favorites';
+  static const about = '/settings/about';
+  static const feedback = '/settings/feedback';
+  static const privacy = '/settings/privacy';
+  static const terms = '/settings/terms';
+  static const paywall = '/settings/paywall';
 
   // ============ Route Helpers ============
   // For parameterized routes, use these helpers to build correct paths

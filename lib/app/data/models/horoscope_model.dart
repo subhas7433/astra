@@ -18,6 +18,20 @@ class HoroscopeModel extends Equatable {
   final String? tipText;
   final String? tipTextHi;
   final int energyLevel;
+  
+  // Categories
+  final int lovePercentage;
+  final String lovePrediction;
+  final int careerPercentage;
+  final String careerPrediction;
+  final int healthPercentage;
+  final String healthPrediction;
+
+  // Lucky Items
+  final List<int> luckyNumbers;
+  final String luckyColor;
+  final String luckyTime;
+
   final DateTime validDate;
   final DateTime createdAt;
 
@@ -31,6 +45,18 @@ class HoroscopeModel extends Equatable {
     this.tipText,
     this.tipTextHi,
     this.energyLevel = 50,
+    
+    this.lovePercentage = 0,
+    this.lovePrediction = '',
+    this.careerPercentage = 0,
+    this.careerPrediction = '',
+    this.healthPercentage = 0,
+    this.healthPrediction = '',
+    
+    this.luckyNumbers = const [],
+    this.luckyColor = '',
+    this.luckyTime = '',
+    
     required this.validDate,
     required this.createdAt,
   });
@@ -50,6 +76,18 @@ class HoroscopeModel extends Equatable {
       tipText: map.getField<String>('tipText'),
       tipTextHi: map.getField<String>('tipTextHi'),
       energyLevel: map.getInt('energyLevel', defaultValue: 50),
+      
+      lovePercentage: map.getInt('lovePercentage', defaultValue: 0),
+      lovePrediction: map.getString('lovePrediction'),
+      careerPercentage: map.getInt('careerPercentage', defaultValue: 0),
+      careerPrediction: map.getString('careerPrediction'),
+      healthPercentage: map.getInt('healthPercentage', defaultValue: 0),
+      healthPrediction: map.getString('healthPrediction'),
+      
+      luckyNumbers: List<int>.from(map['luckyNumbers'] ?? []),
+      luckyColor: map.getString('luckyColor'),
+      luckyTime: map.getString('luckyTime'),
+      
       validDate: map.getDateTime('validDate') ?? DateTime.now(),
       createdAt: map.appwriteCreatedAt ?? DateTime.now(),
     );
@@ -66,6 +104,18 @@ class HoroscopeModel extends Equatable {
       'tipText': tipText,
       'tipTextHi': tipTextHi,
       'energyLevel': energyLevel,
+      
+      'lovePercentage': lovePercentage,
+      'lovePrediction': lovePrediction,
+      'careerPercentage': careerPercentage,
+      'careerPrediction': careerPrediction,
+      'healthPercentage': healthPercentage,
+      'healthPrediction': healthPrediction,
+      
+      'luckyNumbers': luckyNumbers,
+      'luckyColor': luckyColor,
+      'luckyTime': luckyTime,
+      
       'validDate': validDate.toAppwriteString(),
       'createdAt': createdAt.toAppwriteString(),
     };
@@ -113,6 +163,18 @@ class HoroscopeModel extends Equatable {
     String? tipText,
     String? tipTextHi,
     int? energyLevel,
+    
+    int? lovePercentage,
+    String? lovePrediction,
+    int? careerPercentage,
+    String? careerPrediction,
+    int? healthPercentage,
+    String? healthPrediction,
+    
+    List<int>? luckyNumbers,
+    String? luckyColor,
+    String? luckyTime,
+    
     DateTime? validDate,
     DateTime? createdAt,
   }) {
@@ -126,6 +188,18 @@ class HoroscopeModel extends Equatable {
       tipText: tipText ?? this.tipText,
       tipTextHi: tipTextHi ?? this.tipTextHi,
       energyLevel: energyLevel ?? this.energyLevel,
+      
+      lovePercentage: lovePercentage ?? this.lovePercentage,
+      lovePrediction: lovePrediction ?? this.lovePrediction,
+      careerPercentage: careerPercentage ?? this.careerPercentage,
+      careerPrediction: careerPrediction ?? this.careerPrediction,
+      healthPercentage: healthPercentage ?? this.healthPercentage,
+      healthPrediction: healthPrediction ?? this.healthPrediction,
+      
+      luckyNumbers: luckyNumbers ?? this.luckyNumbers,
+      luckyColor: luckyColor ?? this.luckyColor,
+      luckyTime: luckyTime ?? this.luckyTime,
+      
       validDate: validDate ?? this.validDate,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -158,7 +232,7 @@ class HoroscopeModel extends Equatable {
   bool get hasHindiTip => tipTextHi != null && tipTextHi!.isNotEmpty;
 
   /// Get energy level as percentage string (e.g., "75%").
-  String get energyPercentage => '$energyLevel%';
+  String get energyPercentageStr => '$energyLevel%';
 
   /// Get energy level description.
   String get energyDescription {
@@ -212,6 +286,15 @@ class HoroscopeModel extends Equatable {
         tipText,
         tipTextHi,
         energyLevel,
+        lovePercentage,
+        lovePrediction,
+        careerPercentage,
+        careerPrediction,
+        healthPercentage,
+        healthPrediction,
+        luckyNumbers,
+        luckyColor,
+        luckyTime,
         validDate,
         createdAt,
       ];

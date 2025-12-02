@@ -10,10 +10,15 @@ import '../widgets/home_app_bar.dart';
 import '../widgets/most_asked_section.dart';
 import '../widgets/pandit_banner.dart';
 import '../widgets/today_mantra_card.dart';
+import '../../../widgets/ads/banner_ad_widget.dart';
 import '../../../routes/app_routes.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
+
+  static void _navigateToMantra() {
+    Get.toNamed(AppRoutes.todayMantra);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +50,7 @@ class HomeScreen extends GetView<HomeController> {
                       // Today Mantra
                       const TodayMantraCard(
                         mantra: 'Om Namah Shivaya', // Mock data
+                        onViewDetails: _navigateToMantra,
                       ),
                       const SizedBox(height: AppDimensions.lg),
 
@@ -76,13 +82,13 @@ class HomeScreen extends GetView<HomeController> {
                             label: 'Today God',
                             icon: Icons.temple_hindu,
                             color: AppColors.primary,
-                            onTap: () => print('Today God tapped'),
+                            onTap: () => Get.toNamed(AppRoutes.todayBhagwan),
                           ),
                           FeatureIconItem(
                             label: 'Numerology',
                             icon: Icons.numbers,
                             color: AppColors.aquariusColor,
-                            onTap: () => print('Numerology tapped'),
+                            onTap: () => Get.toNamed(AppRoutes.numerology),
                           ),
                           FeatureIconItem(
                             label: 'History',
@@ -122,6 +128,10 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
           ),
+          // Banner Ad
+          const SizedBox(height: AppDimensions.paddingMd),
+          const Center(child: BannerAdWidget()),
+          const SizedBox(height: AppDimensions.paddingMd),
         ],
       ),
     );

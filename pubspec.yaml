@@ -19,8 +19,9 @@ dependencies:
   appwrite: ^20.3.2
 
   # Ads & Monetization
-  google_mobile_ads: ^5.0.0
-  purchases_flutter: ^9.0.0
+  google_mobile_ads: ^6.0.0
+  purchases_flutter: ^9.9.9
+  google_sign_in: ^6.2.1
 
   # UI
   flutter_svg: ^2.0.10
@@ -39,6 +40,7 @@ dependencies:
   # Localization
   flutter_localizations:
     sdk: flutter
+  share_plus: ^12.0.1
 
 dev_dependencies:
   flutter_test:

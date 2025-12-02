@@ -25,4 +25,26 @@ class StorageService extends GetxService {
   void clearMessages(String chatId) {
     _box.remove(chatId);
   }
+
+  // Horoscope Caching
+  void saveHoroscope(String key, Map<String, dynamic> data) {
+    _box.write(key, data);
+  }
+
+  Map<String, dynamic>? getHoroscope(String key) {
+    final data = _box.read(key);
+    if (data != null) {
+      return Map<String, dynamic>.from(data);
+    }
+    return null;
+  }
+
+  // User Preferences
+  void saveZodiac(String zodiacId) {
+    _box.write('user_zodiac_sign', zodiacId);
+  }
+
+  String? getZodiac() {
+    return _box.read('user_zodiac_sign');
+  }
 }

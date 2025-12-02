@@ -1,29 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../home/controllers/home_controller.dart'; // Using MockAstrologer
-import '../../../data/services/ai_service.dart';
+import '../../../data/models/astrologer_model.dart';
+import '../../../data/models/message_model.dart';
+import '../../../data/models/enums/sender_type.dart';
+import '../../../data/interfaces/ai_service_interface.dart';
 import '../../../data/services/ad_service.dart';
-import '../../../data/services/storage_service.dart';
+import '../../../data/services/subscription_service.dart';
+import '../../../data/repositories/astrologer_repository.dart';
+import '../../../data/repositories/chat_repository.dart';
 import '../widgets/ad_modal.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/services/guest_service.dart';
 
 class ChatController extends GetxController {
-  final astrologer = Rxn<MockAstrologer>();
+  final AstrologerRepository _astrologerRepository = Get.find<AstrologerRepository>();
+  final ChatRepository _chatRepository = Get.find<ChatRepository>();
+  final AdService _adService = Get.find<AdService>();
+  final IAIService _aiService = Get.find<IAIService>();
+
+  final astrologer = Rxn<AstrologerModel>();
   final isLoading = true.obs;
-  final messages = <Map<String, dynamic>>[].obs; // Mock Message Model
+  final messages = <MessageModel>[].obs;
   final messageInput = ''.obs;
   final isTyping = false.obs;
   final ScrollController scrollController = ScrollController();
-
-
   final TextEditingController textController = TextEditingController();
 
-  final AIService _aiService = AIService();
-  // Get the persistent instance
-  final AdService _adService = Get.find<AdService>();
-  final StorageService _storageService = Get.find<StorageService>();
-  
-  // Use the service's observable
+  String? _sessionId;
+
   RxInt get freeMessageCount => _adService.freeMessageCount;
 
   void onInputChanged(String val) {
@@ -43,70 +47,96 @@ class ChatController extends GetxController {
 
   Future<void> loadAstrologer(String id) async {
     isLoading.value = true;
-    await Future.delayed(const Duration(milliseconds: 500));
     
-    // Mock Data Fetch
-    astrologer.value = MockAstrologer(
-      id: id,
-      name: 'Nikki Diwan',
-      specialty: 'Vedic, Vastu',
-      rating: 4.8,
-      reviewCount: 800,
-      imageUrl: 'https://randomuser.me/api/portraits/women/1.jpg',
+    // Fetch Astrologer
+    // Assuming we can get by ID or find in list
+    final result = await _astrologerRepository.getAstrologers(limit: 100);
+    result.fold(
+      onSuccess: (list) {
+        astrologer.value = list.firstWhereOrNull((a) => a.id == id);
+      },
+      onFailure: (error) => Get.snackbar('Error', error.message),
     );
 
-    // Load Persisted Messages
-    final savedMessages = _storageService.getMessages(id);
-    if (savedMessages.isNotEmpty) {
-      messages.assignAll(savedMessages);
-    } else {
-      // Load Mock Messages if no history
-      messages.addAll([
-        {
-          'message': 'Hello! How can I help you today?',
-          'isUser': false,
-          'time': '10:00 AM',
-        },
-      ]);
+    if (astrologer.value == null) {
+      // Fallback mock if not found (for safety during dev)
+      // In real app, handle error or redirect
     }
+
+    // Initialize Session
+    final sessionResult = await _chatRepository.createSession(id);
+    sessionResult.fold(
+      onSuccess: (sessionId) {
+        _sessionId = sessionId;
+        _loadMessages(sessionId);
+      },
+      onFailure: (error) => Get.snackbar('Error', 'Failed to start chat session'),
+    );
     
     isLoading.value = false;
-    scrollToBottom();
+  }
+
+  Future<void> _loadMessages(String sessionId) async {
+    final result = await _chatRepository.getMessages(sessionId);
+    result.fold(
+      onSuccess: (list) {
+        messages.assignAll(list);
+        if (messages.isEmpty) {
+          // Add welcome message if empty
+          messages.add(MessageModel(
+            id: 'welcome',
+            sessionId: sessionId,
+            senderType: SenderType.astrologer,
+            content: 'Hello! How can I help you today?',
+            createdAt: DateTime.now(),
+          ));
+        }
+        scrollToBottom();
+      },
+      onFailure: (error) => Get.snackbar('Error', 'Failed to load messages'),
+    );
   }
 
   void sendMessage() {
-    if (messageInput.value.trim().isEmpty) return;
+    if (messageInput.value.trim().isEmpty || _sessionId == null) return;
 
-    // Check Free Limit
-    if (freeMessageCount.value <= 0) {
+    // Check Guest Limit
+    if (!GuestService.to.canGuestChat()) {
+      GuestService.to.incrementGuestChat(); // Triggers prompt
+      return;
+    }
+
+    // Check Free Limit (if not premium)
+    final isPremium = Get.find<SubscriptionService>().isPremium.value;
+    if (!isPremium && freeMessageCount.value <= 0) {
       _showAdModal();
       return;
     }
     
     final text = messageInput.value.trim();
-    messages.add({
-      'message': text,
-      'isUser': true,
-      'time': _formatTime(DateTime.now()),
-    });
-    
-    _saveMessages();
+    final message = MessageModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      sessionId: _sessionId!,
+      senderType: SenderType.user,
+      content: text,
+      createdAt: DateTime.now(),
+    );
+
+    messages.add(message);
+    _chatRepository.saveMessage(_sessionId!, message);
     
     // Decrement Count via Service
     _adService.decrementCredit();
+    
+    // Increment Guest Count
+    GuestService.to.incrementGuestChat();
 
     messageInput.value = '';
     textController.clear();
     scrollToBottom();
 
     // Simulate AI Response
-    _simulateAIResponse();
-  }
-
-  void _saveMessages() {
-    if (astrologer.value != null) {
-      _storageService.saveMessages(astrologer.value!.id, messages);
-    }
+    _simulateAIResponse(text);
   }
 
   void _showAdModal() {
@@ -120,18 +150,16 @@ class ChatController extends GetxController {
   }
 
   Future<void> _watchAd() async {
-    // Show Loading
     Get.dialog(
       const Center(child: CircularProgressIndicator(color: Colors.white)),
       barrierDismissible: false,
     );
 
     final success = await _adService.showRewardedAd();
-    
-    Get.back(); // Close Loading
+    Get.back();
 
     if (success) {
-      _adService.resetCredits(); // Reset limit via Service
+      _adService.resetCredits();
       Get.snackbar(
         'Success',
         'You earned 3 more free messages!',
@@ -143,7 +171,6 @@ class ChatController extends GetxController {
   }
 
   void _removeAds() {
-    // TODO: Implement In-App Purchase
     Get.snackbar(
       'Premium',
       'Premium features coming soon!',
@@ -153,22 +180,27 @@ class ChatController extends GetxController {
     );
   }
 
-  void _simulateAIResponse() async {
+  void _simulateAIResponse(String userMessage) async {
     isTyping.value = true;
     scrollToBottom();
     
-    final response = await _aiService.generateResponse(
-      messages.last['message'], 
+    final responseText = await _aiService.generateResponse(
+      userMessage, 
       astrologer.value?.name ?? 'Astrologer'
     );
     
     isTyping.value = false;
-    messages.add({
-      'message': response,
-      'isUser': false,
-      'time': _formatTime(DateTime.now()),
-    });
-    _saveMessages();
+    
+    final responseMessage = MessageModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      sessionId: _sessionId!,
+      senderType: SenderType.astrologer,
+      content: responseText,
+      createdAt: DateTime.now(),
+    );
+
+    messages.add(responseMessage);
+    _chatRepository.saveMessage(_sessionId!, responseMessage);
     scrollToBottom();
   }
 
@@ -184,68 +216,8 @@ class ChatController extends GetxController {
     });
   }
 
-  String _formatTime(DateTime date) {
-    return "${date.hour}:${date.minute.toString().padLeft(2, '0')} ${date.hour >= 12 ? 'PM' : 'AM'}";
-  }
-
   void onMenuAction(String action) {
-    switch (action) {
-      case 'Clear Chat':
-        _clearChat();
-        break;
-      case 'Report':
-        _reportChat();
-        break;
-      case 'Block':
-        _blockAstrologer();
-        break;
-    }
-  }
-
-  void _clearChat() {
-    Get.defaultDialog(
-      title: 'Clear Chat',
-      middleText: 'Are you sure you want to delete all messages?',
-      textConfirm: 'Yes',
-      textCancel: 'No',
-      confirmTextColor: Colors.white,
-      onConfirm: () {
-        messages.clear();
-        if (astrologer.value != null) {
-          _storageService.clearMessages(astrologer.value!.id);
-        }
-        Get.back(); // Close dialog
-      },
-    );
-  }
-
-  void _reportChat() {
-    Get.defaultDialog(
-      title: 'Report Astrologer',
-      middleText: 'Do you want to report this astrologer for inappropriate behavior?',
-      textConfirm: 'Report',
-      textCancel: 'Cancel',
-      confirmTextColor: Colors.white,
-      onConfirm: () {
-        Get.back();
-        Get.snackbar('Reported', 'Thank you for your feedback. We will investigate.');
-      },
-    );
-  }
-
-  void _blockAstrologer() {
-    Get.defaultDialog(
-      title: 'Block Astrologer',
-      middleText: 'You will no longer receive messages from this astrologer.',
-      textConfirm: 'Block',
-      textCancel: 'Cancel',
-      confirmTextColor: Colors.white,
-      onConfirm: () {
-        Get.back(); // Close dialog
-        Get.back(); // Exit chat
-        Get.snackbar('Blocked', '${astrologer.value?.name} has been blocked.');
-      },
-    );
+    // Implement menu actions if needed
   }
 
   @override

@@ -1,6 +1,9 @@
 import 'package:get/get.dart';
 
 import '../core/utils/app_logger.dart';
+import '../data/services/ad_service.dart';
+import '../data/services/subscription_service.dart';
+import '../data/services/guest_service.dart';
 
 /// Initial binding for app-wide dependencies.
 /// Called once when the app starts via GetMaterialApp.
@@ -24,10 +27,10 @@ class InitialBinding extends Bindings {
     AppLogger.debug('Setting up initial bindings', tag: _tag);
 
     // Register app-wide controllers here
-    // Example:
-    // Get.put(AppController(), permanent: true);
-    // Get.put(ConnectivityController(), permanent: true);
-
+    Get.put(SubscriptionService(), permanent: true);
+    Get.put(AdService(), permanent: true);
+    Get.put(GuestService(), permanent: true);
+    
     AppLogger.debug('Initial bindings complete', tag: _tag);
   }
 }

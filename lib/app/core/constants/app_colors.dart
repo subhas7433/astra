@@ -90,4 +90,14 @@ abstract class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // Shimmer
+  static const Color shimmerBase = Color(0xFFE0E0E0);
+  static const Color shimmerHighlight = Color(0xFFF5F5F5);
+
+  // Surface Variant
+  static const Color surfaceVariant = Color(0xFFF5F5F5);
+  
+  // Border
+  static const Color border = Color(0xFFE0E0E0);
 }

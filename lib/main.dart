@@ -35,7 +35,7 @@ Future<void> main() async {
   await ServiceLocator.init(useMocks: useMocks);
   
   // Initialize AdService permanently
-  Get.put(AdService(), permanent: true);
+  // AdService is initialized in InitialBinding
   
   // Initialize StorageService
   await Get.putAsync(() => StorageService().init());

@@ -1,6 +1,7 @@
 import 'dart:math';
+import '../interfaces/ai_service_interface.dart';
 
-class AIService {
+class AIService implements IAIService {
   final Random _random = Random();
 
   Future<String> generateResponse(String message, String astrologerName) async {
