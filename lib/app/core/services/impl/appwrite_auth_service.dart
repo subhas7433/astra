@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -156,7 +157,7 @@ class AppwriteAuthService extends GetxService implements IAuthService {
       final googleUser = await googleSignIn.signIn();
       
       if (googleUser == null) {
-        return Result.failure(AuthError(message: 'Google sign-in cancelled'));
+        return Result.failure(const GeneralAuthError(message: 'Google sign-in cancelled'));
       }
 
       AppLogger.info('Google user signed in: ${googleUser.email}', tag: _tag);
@@ -168,7 +169,7 @@ class AppwriteAuthService extends GetxService implements IAuthService {
       // Or standard OAuth2 flow. 
       // The standard Appwrite Flutter OAuth2 flow:
       await _account.createOAuth2Session(
-        provider: 'google',
+        provider: OAuthProvider.google,
       );
 
       // After webview closes, we check session
@@ -246,7 +247,24 @@ class AppwriteAuthService extends GetxService implements IAuthService {
     AppLogger.info('Deleting user account', tag: _tag);
 
     try {
-      // Update identity (this is how Appwrite handles account deletion)
+      final userId = currentUserId;
+      if (userId != null) {
+        // 1. Delete user document from database (data cleanup)
+        try {
+          await _clientProvider.databases.deleteDocument(
+            databaseId: _clientProvider.config.databaseId,
+            collectionId: 'users',
+            documentId: userId,
+          );
+          AppLogger.info('User document deleted', tag: _tag);
+        } catch (e) {
+          // Log but continue - ensuring account access is revoked is priority
+          AppLogger.warning('Failed to delete user document: $e', tag: _tag);
+        }
+      }
+
+      // 2. Block the account (Client-side deletion strategy)
+      // This invalidates sessions and prevents login
       await _account.updateStatus();
       _updateAuthState(null);
 
@@ -286,6 +304,12 @@ class AppwriteAuthService extends GetxService implements IAuthService {
         stackTrace: stack,
       ));
     }
+  }
+
+  @override
+  Future<Result<void, AppError>> resetPassword(String email) async {
+    // Delegate to sendPasswordRecovery
+    return sendPasswordRecovery(email);
   }
 
   @override

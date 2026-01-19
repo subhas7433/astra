@@ -10,7 +10,7 @@
 Complete monetization system with AdMob ads, RevenueCat subscriptions, and premium features
 
 ### What We're Building
-- AdMob integration (banner, interstitial, rewarded)
+- AdMob integration (banner, app open, rewarded)
 - Rewarded ads for free chat credits
 - RevenueCat subscription management
 - Three subscription tiers (Basic, Pro, Premium)
@@ -220,14 +220,13 @@ class AdService extends GetxService {
 
 ---
 
-## Session 2: Banner & Interstitial Ads (4 hours)
+## Session 2: Banner & App Open Ads (4 hours)
 
 ### Objectives
 1. Create BannerAdWidget component
 2. Implement banner ad placement
-3. Build interstitial ad flow
-4. Add ad frequency capping
-5. Handle ad lifecycle properly
+3. Verify App Open ad flow (already in AdService)
+4. Handle ad lifecycle properly
 
 ### Key Deliverables
 
@@ -235,8 +234,7 @@ class AdService extends GetxService {
 |-------------|-------------|
 | `BannerAdWidget` | Reusable banner component |
 | Banner placements | Home, Horoscope screens |
-| Interstitial flow | Between screen transitions |
-| Frequency capping | Max 1 interstitial per 3 min |
+| App Open Ads | Resume from background |
 | Lifecycle handling | Pause/resume with app |
 
 ### Banner Ad Placement (from design)
@@ -268,8 +266,7 @@ Horoscope Detail:
 | Banner loading logic | 35 min | Load + error handling |
 | Home banner placement | 30 min | Bottom position |
 | Horoscope banner | 30 min | Below tabs |
-| Interstitial loading | 40 min | Preload logic |
-| Frequency capping | 35 min | Time-based limit |
+| App Open verification | 30 min | Resume test |
 
 ### BannerAdWidget
 ```dart
@@ -287,33 +284,17 @@ BannerAdWidget() // Standard banner
 BannerAdWidget(adSize: AdSize.largeBanner) // 320x100
 ```
 
-### Interstitial Frequency Capping
+### App Open Ads
 ```dart
-class AdService {
-  DateTime? _lastInterstitialShown;
-  static const _interstitialCooldown = Duration(minutes: 3);
-
-  bool get canShowInterstitial {
-    if (_lastInterstitialShown == null) return true;
-    return DateTime.now().difference(_lastInterstitialShown!) > _interstitialCooldown;
-  }
-
-  void showInterstitial({VoidCallback? onComplete}) {
-    if (!canShowInterstitial) {
-      onComplete?.call();
-      return;
-    }
-    // Show ad...
-    _lastInterstitialShown = DateTime.now();
-  }
-}
+// Already in AdService
+// Triggered on AppLifecycleState.resumed
 ```
 
 ### Acceptance Criteria
+### Acceptance Criteria
 - [ ] Banner ads display correctly sized
 - [ ] Banner hides for premium users
-- [ ] Interstitial shows between screens
-- [ ] Frequency capping works
+- [ ] App Open ad shows on resume
 - [ ] Ads pause when app backgrounds
 - [ ] No crashes on ad errors
 

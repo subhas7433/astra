@@ -19,14 +19,18 @@ class LanguageController extends GetxController {
   }
 
   void _loadLocale() {
-    // TODO: Load from storage when implemented in StorageService
-    // For now, default to English
-    selectedLocale.value = Get.locale ?? const Locale('en', 'US');
+    final savedLocale = _storageService.getLocale();
+    if (savedLocale != null) {
+      selectedLocale.value = savedLocale;
+      Get.updateLocale(savedLocale);
+    } else {
+      selectedLocale.value = Get.deviceLocale ?? const Locale('en', 'US');
+    }
   }
 
   void updateLocale(Locale locale) {
     selectedLocale.value = locale;
     Get.updateLocale(locale);
-    // TODO: Save to storage
+    _storageService.saveLocale(locale);
   }
 }

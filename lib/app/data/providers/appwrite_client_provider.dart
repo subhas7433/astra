@@ -37,6 +37,9 @@ class AppwriteClientProvider {
   /// Realtime service for subscriptions
   late final Realtime realtime;
 
+  /// Functions service for serverless functions
+  late final Functions functions;
+
   /// Private constructor
   AppwriteClientProvider._internal(this.config) {
     _initClient();
@@ -64,6 +67,7 @@ class AppwriteClientProvider {
     databases = Databases(client);
     storage = Storage(client);
     realtime = Realtime(client);
+    functions = Functions(client);
 
     AppLogger.info(
       'Appwrite client initialized successfully',

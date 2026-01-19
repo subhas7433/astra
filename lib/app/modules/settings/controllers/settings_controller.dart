@@ -2,27 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
 import '../../../data/repositories/feedback_repository.dart';
+import '../../../core/services/interfaces/i_auth_service.dart';
 
 class SettingsController extends GetxController {
   
   void onProfileEdit() {
-    // TODO: Navigate to Profile Edit (Session 5)
-    Get.snackbar('Coming Soon', 'Profile Edit will be available in Session 5');
+    Get.toNamed(AppRoutes.profileEdit);
   }
 
   void onRemoveAds() {
-    // TODO: Implement In-App Purchase
-    Get.snackbar('Coming Soon', 'Premium features coming soon!');
+    Get.toNamed(AppRoutes.paywall);
   }
 
   void onChangeLanguage() {
-    // TODO: Navigate to Language Screen (Session 5)
-    Get.snackbar('Coming Soon', 'Language settings will be available in Session 5');
+    Get.toNamed(AppRoutes.language);
   }
 
   void onFavorites() {
-    // TODO: Navigate to Favorites (Session 5)
-    Get.snackbar('Coming Soon', 'Favorites will be available in Session 5');
+    Get.toNamed(AppRoutes.favorites);
   }
 
   final FeedbackRepository _feedbackRepository = FeedbackRepository();
@@ -66,9 +63,18 @@ class SettingsController extends GetxController {
     print('Help tapped');
   }
 
-  void onRateUs() {
-    // TODO: Implement Store Redirect
-    Get.snackbar('Coming Soon', 'Rate Us will be available when app is live');
+  void onRateUs() async {
+    // Placeholder for store URLs
+    // final url = Platform.isAndroid 
+    //   ? 'market://details?id=com.technoava.astra' 
+    //   : 'https://apps.apple.com/app/id...';
+    // if (await canLaunch(url)) await launch(url);
+    
+    Get.snackbar(
+      'Rate Us', 
+      'Thank you for your interest! Store links will be available soon.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 
   void onRequestFeature() {
@@ -82,10 +88,17 @@ class SettingsController extends GetxController {
       textConfirm: 'Logout',
       textCancel: 'Cancel',
       confirmTextColor: Colors.white,
-      onConfirm: () {
-        // TODO: Implement logout
-        Get.back();
-        Get.offAllNamed(AppRoutes.home);
+      onConfirm: () async {
+        Get.back(); // Close dialog
+        
+        // Show loading
+        Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+        
+        final authService = Get.find<IAuthService>();
+        await authService.logout();
+        
+        Get.back(); // Close loading
+        Get.offAllNamed(AppRoutes.login);
       },
     );
   }
@@ -101,13 +114,23 @@ class SettingsController extends GetxController {
       onConfirm: () async {
         Get.back(); // Close dialog
         
-        // Simulate API call
+        // Show loading
         Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
-        await Future.delayed(const Duration(seconds: 2));
+        
+        final authService = Get.find<IAuthService>();
+        final result = await authService.deleteAccount();
+        
         Get.back(); // Close loading
         
-        Get.snackbar('Account Deleted', 'Your account has been deleted.');
-        Get.offAllNamed(AppRoutes.login);
+        result.fold(
+          onSuccess: (_) {
+             Get.snackbar('Account Deleted', 'Your account has been deleted.');
+             Get.offAllNamed(AppRoutes.login);
+          },
+          onFailure: (error) {
+             Get.snackbar('Error', 'Failed to delete account: ${error.message}', backgroundColor: Colors.red, colorText: Colors.white);
+          },
+        );
       },
     );
   }

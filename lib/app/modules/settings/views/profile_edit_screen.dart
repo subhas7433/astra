@@ -3,22 +3,16 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../controllers/profile_edit_controller.dart';
 
-class ProfileEditScreen extends StatefulWidget {
+class ProfileEditScreen extends GetView<ProfileEditController> {
   const ProfileEditScreen({super.key});
 
   @override
-  State<ProfileEditScreen> createState() => _ProfileEditScreenState();
-}
-
-class _ProfileEditScreenState extends State<ProfileEditScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: 'John Doe');
-  final _emailController = TextEditingController(text: 'john.doe@example.com');
-  final _phoneController = TextEditingController(text: '+91 9876543210');
-
-  @override
   Widget build(BuildContext context) {
+    // Ideally use Bindings, but for now lazy put here if not bound globally/route
+    Get.lazyPut(() => ProfileEditController());
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -30,66 +24,69 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           onPressed: () => Get.back(),
         ),
         actions: [
-          TextButton(
-            onPressed: _saveProfile,
-            child: Text('Save', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.primary)),
+          Obx(() => controller.isLoading.value 
+            ? const Center(child: Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+              ))
+            : TextButton(
+                onPressed: controller.saveProfile,
+                child: Text('Save', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.primary)),
+              )
           ),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimensions.paddingMd),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Avatar
-              Center(
-                child: Stack(
-                  children: [
-                    const CircleAvatar(
-                      radius: 50,
-                      backgroundImage: NetworkImage('https://randomuser.me/api/portraits/men/1.jpg'),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: AppColors.primary,
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
-                          onPressed: () {
-                            // TODO: Pick image
-                          },
-                        ),
+        child: Column(
+          children: [
+            // Avatar
+            Center(
+              child: Stack(
+                children: [
+                  const CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage('https://randomuser.me/api/portraits/men/1.jpg'),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: AppColors.primary,
+                      child: IconButton(
+                        icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                        onPressed: () {
+                          // TODO: Pick image
+                        },
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppDimensions.xl),
+            ),
+            const SizedBox(height: AppDimensions.xl),
 
-              // Fields
-              _buildTextField('Name', _nameController),
-              const SizedBox(height: AppDimensions.lg),
-              _buildTextField('Email', _emailController, keyboardType: TextInputType.emailAddress),
-              const SizedBox(height: AppDimensions.lg),
-              _buildTextField('Phone', _phoneController, keyboardType: TextInputType.phone),
-            ],
-          ),
+            // Fields
+            _buildTextField('Name', controller.nameController),
+            const SizedBox(height: AppDimensions.lg),
+            _buildTextField('Email', controller.emailController, keyboardType: TextInputType.emailAddress),
+            const SizedBox(height: AppDimensions.lg),
+            _buildTextField('Phone', controller.phoneController, keyboardType: TextInputType.phone),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {TextInputType? keyboardType}) {
+  Widget _buildTextField(String label, TextEditingController textController, {TextInputType? keyboardType}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
         const SizedBox(height: AppDimensions.xs),
         TextFormField(
-          controller: controller,
+          controller: textController,
           keyboardType: keyboardType,
           style: AppTextStyles.bodyLarge,
           decoration: InputDecoration(
@@ -104,36 +101,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               vertical: AppDimensions.paddingSm,
             ),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter $label';
-            }
-            return null;
-          },
         ),
       ],
     );
-  }
-
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Save to repository
-      Get.back();
-      Get.snackbar(
-        'Success',
-        'Profile updated successfully',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    super.dispose();
   }
 }

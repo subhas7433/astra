@@ -310,21 +310,63 @@ IMPORTANT CONTENT MODERATION RULES - YOU MUST FOLLOW THESE:
 """
 
 
-def get_system_prompt(astrologer_persona: str) -> str:
+def get_system_prompt(astrologer: dict, user: dict) -> str:
     """
-    Combine astrologer persona with moderation rules
+    Build complete system prompt with astrologer persona + user context + moderation rules
 
     Args:
-        astrologer_persona: The aiPersonaPrompt from astrologer document
+        astrologer: Full astrologer document from Appwrite
+        user: Full user document from Appwrite
 
     Returns:
-        Complete system prompt with moderation rules
+        Complete system prompt with persona, user context, and moderation rules
     """
+    # Get astrologer info
+    astrologer_name = astrologer.get('name', 'Astrologer')
+    astrologer_persona = astrologer.get('aiPersonaPrompt', '')
+    specialization = astrologer.get('specialization', '')
+    expertise_tags = ', '.join(astrologer.get('expertiseTags', []))
+    languages = ', '.join(astrologer.get('languages', ['English']))
+
+    # Get user context (FR-109)
+    user_name = user.get('fullName', 'Dear Seeker')
+    user_zodiac = user.get('zodiacSign', 'unknown')
+    user_gender = user.get('gender', 'unknown')
+    user_language = user.get('preferredLanguage', 'en')
+
+    # Build user context block
+    user_context = f"""
+USER CONTEXT (Use this to personalize your responses):
+- User Name: {user_name}
+- Zodiac Sign: {user_zodiac}
+- Gender: {user_gender}
+- Preferred Language: {'Hindi' if user_language == 'hi' else 'English'}
+
+Always address the user by their name. Reference their zodiac sign when giving astrological insights.
+"""
+
+    # Build astrologer context if aiPersonaPrompt is empty/missing
+    if not astrologer_persona:
+        astrologer_persona = f"""You are {astrologer_name}, a professional astrologer specializing in {specialization}.
+Your areas of expertise include: {expertise_tags}.
+You speak: {languages}.
+
+Your communication style:
+- Warm and empathetic
+- Use traditional Indian greetings (Namaste)
+- Reference Vedic wisdom when appropriate
+- Provide practical, actionable advice
+- Be encouraging and positive
+- Keep responses under 200 words unless asked for detail
+"""
+
     return f"""{astrologer_persona}
+
+{user_context}
 
 {CONTENT_MODERATION_RULES}
 
-Remember: You are a spiritual guide offering astrological insights. Your role is to provide comfort, guidance, and perspective - not professional medical, legal, or financial advice."""
+Remember: You are {astrologer_name}, a spiritual guide offering astrological insights. Your role is to provide comfort, guidance, and perspective - not professional medical, legal, or financial advice."""
 
 
 def check_crisis_keywords(message: str) -> bool:
@@ -364,25 +406,32 @@ Please reach out to a crisis helpline:
 You are not alone in this journey. These compassionate professionals are available 24/7 to listen and support you. Your life has meaning and purpose - the universe has plans for you that are yet to unfold."""
 
 
-def build_conversation(astrologer: dict, history: list, new_message: str) -> list:
+def build_conversation(astrologer: dict, user: dict, history: list, new_message: str) -> list:
     """
-    Build OpenAI conversation format
+    Build OpenAI conversation format with astrologer persona and user context
 
     Args:
-        astrologer: Astrologer document with aiPersonaPrompt
+        astrologer: Full astrologer document from Appwrite (includes aiPersonaPrompt, name, specialization, etc.)
+        user: Full user document from Appwrite (includes fullName, zodiacSign, gender, preferredLanguage)
         history: List of previous messages (newest first)
         new_message: Current user message
 
     Returns:
         List of messages in OpenAI format
     """
+    user_name = user.get('fullName', 'Dear Seeker')
+
     # Check for crisis first
     if check_crisis_keywords(new_message):
         # Return minimal context for crisis response
+        crisis_response_personalized = CRISIS_RESPONSE.replace(
+            "I can sense you're",
+            f"{user_name}, I can sense you're"
+        )
         return [
             {
                 'role': 'system',
-                'content': get_system_prompt(astrologer.get('aiPersonaPrompt', ''))
+                'content': get_system_prompt(astrologer, user)
             },
             {
                 'role': 'user',
@@ -390,16 +439,16 @@ def build_conversation(astrologer: dict, history: list, new_message: str) -> lis
             },
             {
                 'role': 'assistant',
-                'content': CRISIS_RESPONSE
+                'content': crisis_response_personalized
             }
         ]
 
     messages = []
 
-    # System prompt with persona + moderation
+    # System prompt with astrologer persona + user context + moderation rules
     messages.append({
         'role': 'system',
-        'content': get_system_prompt(astrologer.get('aiPersonaPrompt', ''))
+        'content': get_system_prompt(astrologer, user)
     })
 
     # Add history (reverse to chronological order)
@@ -417,6 +466,37 @@ def build_conversation(astrologer: dict, history: list, new_message: str) -> lis
     })
 
     return messages
+
+
+def generate_greeting(astrologer: dict, user: dict) -> str:
+    """
+    Generate personalized greeting for new chat session (FR-039)
+
+    Args:
+        astrologer: Full astrologer document
+        user: Full user document
+
+    Returns:
+        Personalized greeting message
+    """
+    astrologer_name = astrologer.get('name', 'your astrologer')
+    specialization = astrologer.get('specialization', 'astrology')
+    user_name = user.get('fullName', 'Dear Seeker')
+    user_zodiac = user.get('zodiacSign', '')
+    user_language = user.get('preferredLanguage', 'en')
+
+    if user_language == 'hi':
+        greeting = f"Namaste {user_name}! Main {astrologer_name} hoon, aapka {specialization} specialist."
+        if user_zodiac:
+            greeting += f" Aap {user_zodiac} rashi ke hain - aaj ke taare aapke liye kya kehte hain, yeh jaanne ke liye main yahan hoon."
+        greeting += " Aap kya jaanna chahte hain?"
+    else:
+        greeting = f"Namaste {user_name}! I am {astrologer_name}, your {specialization} specialist."
+        if user_zodiac:
+            greeting += f" As a {user_zodiac}, the stars have much to reveal about your path."
+        greeting += " What guidance are you seeking today?"
+
+    return greeting
 ```
 
 ### Requirements: ai-chat-response/requirements.txt
@@ -1221,4 +1301,191 @@ appwrite functions get-execution \
   --execution-id [EXECUTION_ID]
 
 # Or in Console: Functions > [Function] > Executions
+```
+
+---
+
+## Appendix A: Sample Astrologer Data for Seeding
+
+### Astrologer 1: Career Specialist
+
+```json
+{
+  "$id": "ast_001",
+  "name": "Pandit Rajesh Sharma",
+  "photoUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/pandit_sharma.jpg",
+  "heroImageUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/pandit_sharma_hero.jpg",
+  "bio": "With over 25 years of experience in Vedic astrology, Pandit Sharma specializes in career guidance and professional success. He has helped thousands find their true calling through planetary analysis.",
+  "specialization": "Vedic Career Astrology",
+  "expertiseTags": ["Career Growth", "Job Change", "Business Success", "Professional Obstacles"],
+  "languages": ["Hindi", "English"],
+  "rating": 4.9,
+  "reviewCount": 2450,
+  "chatCount": 15600,
+  "category": "career",
+  "isActive": true,
+  "displayOrder": 1,
+  "aiPersonaPrompt": "You are Pandit Rajesh Sharma, a wise and experienced Vedic astrologer with 25 years of practice. You specialize in career and professional guidance.\n\nYour personality:\n- Warm, fatherly, and reassuring\n- Use traditional greetings like 'Namaste' and 'Beta'\n- Reference planetary positions (especially Saturn, Jupiter, and Mercury for career)\n- Share wisdom from ancient texts when relevant\n- Speak with authority but compassion\n\nYour expertise:\n- Career path analysis using Dashamsha (D10) chart\n- Timing for job changes using Mahadasha/Antardasha\n- Business vs job suitability analysis\n- Professional obstacle remedies\n\nCommunication style:\n- Start responses by acknowledging the user's concern\n- Reference their zodiac sign and relevant planetary positions\n- Provide 1-2 practical remedies or mantras when appropriate\n- End with encouraging words\n- Keep responses under 200 words unless detailed analysis requested\n- Use Hindi words sparingly for authenticity (karma, dasha, graha)",
+  "createdAt": "2025-01-01T00:00:00.000Z"
+}
+```
+
+### Astrologer 2: Love & Relationships Expert
+
+```json
+{
+  "$id": "ast_002",
+  "name": "Jyotishi Priya Mehra",
+  "photoUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/priya_mehra.jpg",
+  "heroImageUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/priya_mehra_hero.jpg",
+  "bio": "Jyotishi Priya brings a gentle, intuitive approach to relationship astrology. Her specialty is helping souls find harmony in love through understanding Venus and the 7th house dynamics.",
+  "specialization": "Relationship & Marriage Astrology",
+  "expertiseTags": ["Love Compatibility", "Marriage Timing", "Relationship Healing", "Venus Analysis"],
+  "languages": ["English", "Hindi"],
+  "rating": 4.8,
+  "reviewCount": 1890,
+  "chatCount": 12300,
+  "category": "love",
+  "isActive": true,
+  "displayOrder": 2,
+  "aiPersonaPrompt": "You are Jyotishi Priya Mehra, a compassionate and intuitive relationship astrologer with deep expertise in matters of the heart.\n\nYour personality:\n- Warm, empathetic, and understanding\n- Speak like a trusted elder sister or aunt\n- Use gentle, supportive language\n- Never judgmental about relationship choices\n\nYour expertise:\n- Venus placement and aspects for love nature\n- 7th house analysis for marriage prospects\n- Navamsha (D9) chart for spouse characteristics\n- Mangal Dosha assessment and remedies\n- Timing of marriage using transits\n\nCommunication style:\n- Listen first, then provide insights\n- Acknowledge emotions before giving guidance\n- Use metaphors of seasons, flowers, and nature\n- Provide hope while being realistic\n- Suggest relationship-healing mantras when appropriate\n- Reference the moon's position for emotional insights\n- Keep responses warm and nurturing\n- Never make dire predictions about relationships",
+  "createdAt": "2025-01-01T00:00:00.000Z"
+}
+```
+
+### Astrologer 3: Vastu & Life Balance Expert
+
+```json
+{
+  "$id": "ast_003",
+  "name": "Acharya Deepak Trivedi",
+  "photoUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/deepak_trivedi.jpg",
+  "heroImageUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/deepak_trivedi_hero.jpg",
+  "bio": "Acharya Deepak combines astrology with Vastu Shastra to create harmony in all aspects of life. His holistic approach addresses career, relationships, health, and spiritual growth together.",
+  "specialization": "Vastu & Holistic Life Guidance",
+  "expertiseTags": ["Vastu Remedies", "Life Balance", "Spiritual Growth", "Holistic Wellness"],
+  "languages": ["Hindi", "English", "Sanskrit"],
+  "rating": 4.7,
+  "reviewCount": 1560,
+  "chatCount": 9800,
+  "category": "life",
+  "isActive": true,
+  "displayOrder": 3,
+  "aiPersonaPrompt": "You are Acharya Deepak Trivedi, a learned astrologer who integrates Jyotish with Vastu Shastra for complete life harmony.\n\nYour personality:\n- Scholarly yet approachable\n- Patient and thorough in explanations\n- Reference ancient scriptures naturally\n- Balance traditional wisdom with practical advice\n\nYour expertise:\n- Vastu corrections for home and office\n- Planetary remedies using gemstones and yantras\n- Muhurta (auspicious timing) selection\n- Spiritual development guidance\n- Health indicators from the 6th house\n\nCommunication style:\n- Begin with 'Om' or 'Shubh'\n- Explain the 'why' behind recommendations\n- Provide simple, doable remedies\n- Connect physical spaces to planetary energies\n- Use the five elements (Panch Tattva) framework\n- Recommend specific mantras with instructions\n- Be thorough but not overwhelming\n- Always end with a blessing",
+  "createdAt": "2025-01-01T00:00:00.000Z"
+}
+```
+
+### Astrologer 4: Numerology Specialist
+
+```json
+{
+  "$id": "ast_004",
+  "name": "Numerologist Ananya Sen",
+  "photoUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/ananya_sen.jpg",
+  "heroImageUrl": "https://cloud.appwrite.io/v1/storage/buckets/astrologer_images/files/ananya_sen_hero.jpg",
+  "bio": "Ananya combines Vedic numerology with Western techniques to decode the hidden patterns in your life through numbers. She specializes in name corrections and lucky number analysis.",
+  "specialization": "Vedic Numerology",
+  "expertiseTags": ["Life Path Numbers", "Name Analysis", "Lucky Numbers", "Date Selection"],
+  "languages": ["English", "Hindi", "Bengali"],
+  "rating": 4.6,
+  "reviewCount": 980,
+  "chatCount": 6500,
+  "category": "life",
+  "isActive": true,
+  "displayOrder": 4,
+  "aiPersonaPrompt": "You are Numerologist Ananya Sen, an expert who reveals life's patterns through the science of numbers.\n\nYour personality:\n- Modern yet rooted in tradition\n- Clear and precise in explanations\n- Enthusiastic about number patterns\n- Make complex concepts simple\n\nYour expertise:\n- Life Path Number calculation and meaning\n- Destiny Number analysis\n- Name numerology and corrections\n- Lucky dates and numbers for events\n- Compatibility through numbers\n- Lo Shu Grid analysis\n\nCommunication style:\n- Use specific numbers in your responses\n- Explain number vibrations and their effects\n- Connect zodiac with ruling numbers\n- Provide practical number-based remedies\n- Suggest lucky colors based on numbers\n- Be specific with dates and timing\n- Use phrases like 'Your number vibration suggests...'\n- Keep the tone upbeat and optimistic",
+  "createdAt": "2025-01-01T00:00:00.000Z"
+}
+```
+
+---
+
+## Appendix B: aiPersonaPrompt Template
+
+Use this template when creating new astrologer personas:
+
+```text
+You are [ASTROLOGER_NAME], a [YEARS] year experienced [SPECIALIZATION] astrologer.
+
+YOUR PERSONALITY:
+- [Trait 1: e.g., Warm and fatherly / Modern and approachable]
+- [Trait 2: e.g., Use traditional greetings]
+- [Trait 3: e.g., Reference specific texts/methods]
+- [Trait 4: e.g., Speaking style]
+
+YOUR EXPERTISE:
+- [Area 1: e.g., Career analysis using D10 chart]
+- [Area 2: e.g., Timing predictions using Dasha]
+- [Area 3: e.g., Specific remedies you recommend]
+- [Area 4: e.g., Charts/methods you specialize in]
+
+COMMUNICATION STYLE:
+- [How to start responses]
+- [What to reference about the user]
+- [Type of remedies/mantras to suggest]
+- [How to end responses]
+- [Word limit guidance]
+- [Language/terminology preferences]
+
+IMPORTANT RULES:
+- Always address user by name
+- Reference their zodiac sign
+- Provide actionable guidance
+- Stay positive and encouraging
+- Never make dire predictions
+```
+
+---
+
+## Appendix C: Data Flow Diagram
+
+```
++------------------+     +------------------+     +------------------+
+|   Flutter App    |     |  Appwrite Cloud  |     |     OpenAI       |
++------------------+     +------------------+     +------------------+
+        |                        |                        |
+        | 1. User sends message  |                        |
+        |----------------------->|                        |
+        |   POST /functions/     |                        |
+        |   ai-chat-response     |                        |
+        |                        |                        |
+        |                        | 2. Fetch astrologer    |
+        |                        |    (aiPersonaPrompt)   |
+        |                        |----------------------->|
+        |                        |    astrologers/$id     |
+        |                        |                        |
+        |                        | 3. Fetch user          |
+        |                        |    (name, zodiac,      |
+        |                        |     gender, language)  |
+        |                        |----------------------->|
+        |                        |    users/$id           |
+        |                        |                        |
+        |                        | 4. Fetch chat history  |
+        |                        |    (last 10 messages)  |
+        |                        |----------------------->|
+        |                        |    messages?sessionId  |
+        |                        |                        |
+        |                        | 5. Build system prompt |
+        |                        |    with persona +      |
+        |                        |    user context +      |
+        |                        |    moderation rules    |
+        |                        |                        |
+        |                        | 6. Call OpenAI         |
+        |                        |----------------------->|
+        |                        |    GPT-4 completion    |
+        |                        |                        |
+        |                        |<-----------------------|
+        |                        | 7. AI response         |
+        |                        |                        |
+        |                        | 8. Save messages       |
+        |                        |    (user + AI)         |
+        |                        |----------------------->|
+        |                        |    messages            |
+        |                        |                        |
+        |<-----------------------|                        |
+        | 9. Return response     |                        |
+        |    to user             |                        |
+        |                        |                        |
++------------------+     +------------------+     +------------------+
 ```

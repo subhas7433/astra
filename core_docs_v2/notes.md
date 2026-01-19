@@ -16,3 +16,10 @@
 
   Quick check devices:
   /Users/subhas/Work/flutter/bin/flutter devices
+
+
+
+  Ad units - 
+  App open - ca-app-pub-2063094445044192/3844172313
+  Reward - ca-app-pub-2063094445044192/6676373300
+  Banner - ca-app-pub-2063094445044192/6470335653

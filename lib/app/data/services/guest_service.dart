@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../routes/app_pages.dart';
+import '../../routes/app_routes.dart';
 
 class GuestService extends GetxService {
   static GuestService get to => Get.find();
@@ -13,7 +13,7 @@ class GuestService extends GetxService {
     isGuest.value = true;
     guestChatCount.value = 0;
     // Navigate to home with limited access
-    Get.offAllNamed(Routes.HOME);
+    Get.offAllNamed(AppRoutes.home);
   }
 
   bool canGuestChat() {
@@ -43,7 +43,7 @@ class GuestService extends GetxService {
           ElevatedButton(
             onPressed: () {
               Get.back();
-              Get.toNamed(Routes.REGISTER);
+              Get.toNamed(AppRoutes.register);
             },
             child: const Text('Sign Up'),
           ),

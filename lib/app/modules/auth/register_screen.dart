@@ -8,7 +8,6 @@ import '../../widgets/buttons/app_button.dart';
 import '../../widgets/feedback/error_box.dart';
 import '../../widgets/inputs/app_text_field.dart';
 import '../../widgets/inputs/password_field.dart';
-import '../../widgets/inputs/password_field.dart';
 import '../../data/services/guest_service.dart';
 import 'auth_controller.dart';
 
@@ -31,10 +30,6 @@ class RegisterScreen extends GetView<AuthController> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: controller.goToLogin,
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: controller.goToLogin,

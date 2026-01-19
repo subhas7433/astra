@@ -77,14 +77,18 @@ abstract interface class IAuthService {
   /// Returns void on success, or:
   /// - [SessionExpiredError] if not logged in
   /// - [NetworkError] if connection failed
-  Future<Result<void, AppError>> deleteAccount();
-
   /// Send password recovery email
   ///
   /// Returns void on success, or:
   /// - [UserNotFoundError] if email not registered
   /// - [NetworkError] if connection failed
   Future<Result<void, AppError>> sendPasswordRecovery(String email);
+
+  /// Deletes the current user's account and all associated data.
+  /// This is a destructive action and cannot be undone.
+  Future<Result<void, AppError>> deleteAccount();
+  
+  Future<Result<void, AppError>> resetPassword(String email);
 
   /// Update the current user's password
   ///

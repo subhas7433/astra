@@ -9,6 +9,8 @@ import 'interfaces/i_storage_service.dart';
 import 'impl/appwrite_auth_service.dart';
 import 'impl/appwrite_database_service.dart';
 import 'impl/appwrite_storage_service.dart';
+import 'impl/ad_service.dart';
+import 'impl/subscription_service.dart';
 import 'mock/mock_auth_service.dart';
 import 'mock/mock_database_service.dart';
 import 'mock/mock_storage_service.dart';
@@ -51,6 +53,9 @@ class ServiceLocator {
     } else {
       await _registerAppwriteServices(config);
     }
+    
+    // Register feature services (Ads, Subscriptions)
+    await registerFeatureServices();
 
     AppLogger.info('Services initialized successfully', tag: _tag);
   }
@@ -71,6 +76,7 @@ class ServiceLocator {
 
     // Initialize Appwrite client provider
     final clientProvider = AppwriteClientProvider(appwriteConfig);
+    Get.put<AppwriteClientProvider>(clientProvider, permanent: true);
 
     // Register services as GetxService (permanent by default)
     Get.put<IAuthService>(
@@ -111,6 +117,13 @@ class ServiceLocator {
     AppLogger.debug('Mock services registered', tag: _tag);
   }
 
+  /// Register app-level feature services
+  static Future<void> registerFeatureServices() async {
+     Get.put(SubscriptionService(), permanent: true);
+     Get.put(AdService(), permanent: true);
+     AppLogger.debug('Feature services registered', tag: _tag);
+  }
+
   /// Reset all services (for testing)
   static void reset() {
     AppLogger.debug('Resetting all services', tag: _tag);
@@ -137,7 +150,10 @@ class ServiceLocator {
       Get.isRegistered<IStorageService>();
 
   /// Convenience getters for services
+  /// Convenience getters for services
   static IAuthService get auth => Get.find<IAuthService>();
   static IDatabaseService get database => Get.find<IDatabaseService>();
   static IStorageService get storage => Get.find<IStorageService>();
+  static AdService get ad => Get.find<AdService>();
+  static SubscriptionService get subscription => Get.find<SubscriptionService>();
 }

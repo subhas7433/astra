@@ -10,34 +10,51 @@ class AdService extends GetxService with WidgetsBindingObserver {
   static AdService get to => Get.find();
 
   // Test Ad Unit IDs
-  final String _androidBannerId = 'ca-app-pub-3940256099942544/6300978111';
-  final String _iosBannerId = 'ca-app-pub-3940256099942544/2934735716';
+  final String _androidBannerIdTest = 'ca-app-pub-3940256099942544/6300978111';
+  final String _iosBannerIdTest = 'ca-app-pub-3940256099942544/2934735716';
   
-  final String _androidAppOpenId = 'ca-app-pub-3940256099942544/3419835294';
-  final String _iosAppOpenId = 'ca-app-pub-3940256099942544/5662855259';
+  final String _androidAppOpenIdTest = 'ca-app-pub-3940256099942544/3419835294';
+  final String _iosAppOpenIdTest = 'ca-app-pub-3940256099942544/5662855259';
   
-  final String _androidRewardedId = 'ca-app-pub-3940256099942544/5224354917';
-  final String _iosRewardedId = 'ca-app-pub-3940256099942544/1712485313';
+  final String _androidRewardedIdTest = 'ca-app-pub-3940256099942544/5224354917';
+  final String _iosRewardedIdTest = 'ca-app-pub-3940256099942544/1712485313';
+
+  // Production Ad Unit IDs
+  // Note: iOS IDs are placeholders as user only provided generic/Android-looking IDs
+  // Assuming the provided IDs are for Android or shared if cross-platform config allows (unlikely, usually distinct).
+  // User provided:
+  // App open - ca-app-pub-2063094445044192/3844172313
+  // Reward - ca-app-pub-2063094445044192/6676373300
+  // Banner - ca-app-pub-2063094445044192/6470335653
+  
+  final String _androidBannerIdProd = 'ca-app-pub-2063094445044192/6470335653';
+  final String _iosBannerIdProd = 'ca-app-pub-2063094445044192/6470335653'; // Use same for now or update if different
+  
+  final String _androidAppOpenIdProd = 'ca-app-pub-2063094445044192/3844172313';
+  final String _iosAppOpenIdProd = 'ca-app-pub-2063094445044192/3844172313';
+  
+  final String _androidRewardedIdProd = 'ca-app-pub-2063094445044192/6676373300';
+  final String _iosRewardedIdProd = 'ca-app-pub-2063094445044192/6676373300';
 
   String get bannerAdUnitId {
     if (kDebugMode) {
-      return Platform.isAndroid ? _androidBannerId : _iosBannerId;
+      return Platform.isAndroid ? _androidBannerIdTest : _iosBannerIdTest;
     }
-    return Platform.isAndroid ? _androidBannerId : _iosBannerId;
+    return Platform.isAndroid ? _androidBannerIdProd : _iosBannerIdProd;
   }
 
   String get appOpenAdUnitId {
     if (kDebugMode) {
-      return Platform.isAndroid ? _androidAppOpenId : _iosAppOpenId;
+      return Platform.isAndroid ? _androidAppOpenIdTest : _iosAppOpenIdTest;
     }
-    return Platform.isAndroid ? _androidAppOpenId : _iosAppOpenId;
+    return Platform.isAndroid ? _androidAppOpenIdProd : _iosAppOpenIdProd;
   }
 
   String get rewardedAdUnitId {
     if (kDebugMode) {
-      return Platform.isAndroid ? _androidRewardedId : _iosRewardedId;
+      return Platform.isAndroid ? _androidRewardedIdTest : _iosRewardedIdTest;
     }
-    return Platform.isAndroid ? _androidRewardedId : _iosRewardedId;
+    return Platform.isAndroid ? _androidRewardedIdProd : _iosRewardedIdProd;
   }
 
   // Ad Instances
@@ -51,6 +68,8 @@ class AdService extends GetxService with WidgetsBindingObserver {
   
   // Free message count
   final freeMessageCount = 3.obs;
+  
+  final SubscriptionService _subscriptionService = Get.find<SubscriptionService>();
 
   @override
   void onInit() {
@@ -90,6 +109,10 @@ class AdService extends GetxService with WidgetsBindingObserver {
   }
 
   void showAppOpenAdIfAvailable() {
+    if (_subscriptionService.isPremium) {
+      return;
+    }
+    
     if (_appOpenAd == null || !isAppOpenAdAvailable.value || _isShowingAd) {
       _loadAppOpenAd();
       return;
@@ -147,10 +170,8 @@ class AdService extends GetxService with WidgetsBindingObserver {
     );
   }
 
-  final SubscriptionService _subscriptionService = Get.find<SubscriptionService>();
-
   Future<bool> showRewardedAd() async {
-    if (_subscriptionService.isPremium.value) {
+    if (_subscriptionService.isPremium) {
       return true; // Premium users skip ads and get reward immediately
     }
 

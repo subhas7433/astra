@@ -10,7 +10,7 @@ import '../widgets/home_app_bar.dart';
 import '../widgets/most_asked_section.dart';
 import '../widgets/pandit_banner.dart';
 import '../widgets/today_mantra_card.dart';
-import '../../../widgets/ads/banner_ad_widget.dart';
+import '../../../global/widgets/banner_ad_widget.dart';
 import '../../../routes/app_routes.dart';
 
 class HomeScreen extends GetView<HomeController> {

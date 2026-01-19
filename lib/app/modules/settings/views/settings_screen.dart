@@ -6,6 +6,7 @@ import '../widgets/settings_item.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../routes/app_routes.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -49,7 +50,7 @@ class SettingsScreen extends GetView<SettingsController> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => Get.toNamed('/settings/paywall'),
+                  onTap: () => Get.toNamed(AppRoutes.paywall),
                   borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                   child: Padding(
                     padding: const EdgeInsets.all(AppDimensions.paddingLg),

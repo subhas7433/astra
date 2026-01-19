@@ -10,7 +10,7 @@ import '../widgets/time_period_tabs.dart';
 import '../widgets/category_card.dart';
 import '../widgets/lucky_section.dart';
 import '../widgets/daily_tip_card.dart';
-import '../../../widgets/ads/banner_ad_widget.dart';
+import '../../../global/widgets/banner_ad_widget.dart';
 
 class HoroscopeDetailScreen extends GetView<HoroscopeDetailController> {
   const HoroscopeDetailScreen({super.key});

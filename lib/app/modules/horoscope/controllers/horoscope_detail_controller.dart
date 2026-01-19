@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/zodiac_constants.dart' as ui_constants;
 import '../../../data/models/horoscope_model.dart';
@@ -7,6 +8,7 @@ import '../../../data/models/enums/horoscope_category.dart';
 import '../../../data/repositories/horoscope_repository.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../data/services/guest_service.dart';
+import '../../../data/services/storage_service.dart';
 
 enum TimePeriod { today, weekly, monthly, yearly }
 
@@ -58,7 +60,10 @@ class HoroscopeDetailController extends GetxController {
     );
 
     result.fold(
-      onSuccess: (success) => currentHoroscope.value = success,
+      onSuccess: (success) {
+        currentHoroscope.value = success;
+        _checkIfLiked();
+      },
       onFailure: (failure) {
         Get.snackbar('Error', failure.message);
         currentHoroscope.value = null;
@@ -110,7 +115,20 @@ class HoroscopeDetailController extends GetxController {
       return;
     }
     isLiked.value = !isLiked.value;
-    // TODO: Persist like state
+    
+    if (currentHoroscope.value != null) {
+       // Use prediction ID or composite key (sign + date)
+       // Since ID might vary, let's use a composite string for robustness if ID is missing from model 
+       // But assuming ID exists on model:
+       final id = currentHoroscope.value!.id; // Ensure ID exists in model
+       Get.find<StorageService>().toggleItemLike('horoscope', id);
+    }
+  }
+
+  void _checkIfLiked() {
+     if (currentHoroscope.value != null) {
+       isLiked.value = Get.find<StorageService>().isItemLiked('horoscope', currentHoroscope.value!.id);
+     }
   }
 
   void shareHoroscope() {

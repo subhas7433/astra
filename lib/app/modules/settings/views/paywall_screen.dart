@@ -4,7 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
-import '../../../data/services/subscription_service.dart';
+import '../../../core/services/impl/subscription_service.dart';
 
 class PaywallScreen extends GetView<SubscriptionService> {
   const PaywallScreen({super.key});
@@ -185,52 +185,116 @@ class PaywallScreen extends GetView<SubscriptionService> {
   }
 
   Widget _buildPackageCard(PaywallPackage package) {
-    return InkWell(
-      onTap: () async {
-        final success = await controller.purchasePackage(package);
-        if (success) {
-          Get.back();
-          Get.snackbar(
-            'Success',
-            'Welcome to Premium!',
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingMd),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-          color: Colors.white,
+    // Styling based on Tier
+    final isPro = package.tier == SubscriptionTier.pro;
+    final isPremium = package.tier == SubscriptionTier.premium;
+    final isPopular = isPro; // Designating Pro as popular
+
+    Color borderColor = AppColors.primary.withOpacity(0.3);
+    Color backgroundColor = Colors.white;
+    double borderWidth = 1;
+
+    if (isPopular) {
+      borderColor = AppColors.primary;
+      borderWidth = 2;
+      backgroundColor = AppColors.primary.withOpacity(0.05);
+    } else if (isPremium) {
+      borderColor = Colors.amber;
+      backgroundColor = Colors.amber.withOpacity(0.05);
+    }
+
+    return Stack(
+      children: [
+        InkWell(
+          onTap: () async {
+            final success = await controller.purchasePackage(package);
+            if (success) {
+              Get.back();
+              Get.snackbar(
+                'Success',
+                'Welcome to ${package.title}!',
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+              );
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.only(top: 12), // Space for badge
+            padding: const EdgeInsets.all(AppDimensions.paddingMd),
+            decoration: BoxDecoration(
+              border: Border.all(color: borderColor, width: borderWidth),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              color: backgroundColor,
+              boxShadow: isPopular ? [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ] : null,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            package.title,
+                            style: AppTypography.h3.copyWith(fontSize: 16),
+                          ),
+                          if (isPremium) ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.star, size: 16, color: Colors.amber),
+                          ]
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        package.description,
+                        style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      package.priceString,
+                      style: AppTypography.h3.copyWith(color: AppColors.primary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    package.title,
-                    style: AppTypography.h3.copyWith(fontSize: 16),
-                  ),
-                  Text(
-                    package.description,
-                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+        if (isPopular)
+          Positioned(
+            top: 0,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'MOST POPULAR',
+                style: AppTypography.caption.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
               ),
             ),
-            Text(
-              package.priceString,
-              style: AppTypography.h3.copyWith(color: AppColors.primary),
-            ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 }

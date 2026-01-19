@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -47,4 +48,50 @@ class StorageService extends GetxService {
   String? getZodiac() {
     return _box.read('user_zodiac_sign');
   }
+
+  // Locale
+  void saveLocale(Locale locale) {
+    _box.write('language_code', locale.languageCode);
+    _box.write('country_code', locale.countryCode);
+  }
+
+  Locale? getLocale() {
+    final lang = _box.read('language_code');
+    final country = _box.read('country_code');
+    if (lang != null && country != null) {
+      return Locale(lang, country);
+    }
+    return null;
+  }
+
+  // Horoscope Likes
+  // Favorites / Likes
+  
+  List<String> getLikedItems(String type) {
+    final list = _box.read('liked_$type');
+    if (list != null) {
+      return List<String>.from(list);
+    }
+    return [];
+  }
+
+  bool isItemLiked(String type, String id) {
+    final list = getLikedItems(type);
+    return list.contains(id);
+  }
+
+  void toggleItemLike(String type, String id) {
+    final list = getLikedItems(type);
+    if (list.contains(id)) {
+      list.remove(id);
+    } else {
+      list.add(id);
+    }
+    _box.write('liked_$type', list);
+  }
+
+  // Deprecated: methods for backward compatibility if needed, but safe to remove if unused
+  List<String> getLikedHoroscopes() => getLikedItems('horoscope');
+  bool isHoroscopeLiked(String id) => isItemLiked('horoscope', id);
+  void toggleHoroscopeLike(String id) => toggleItemLike('horoscope', id);
 }

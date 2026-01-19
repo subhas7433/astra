@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
 import '../../../data/repositories/astrologer_repository.dart';
 import '../../../data/repositories/chat_repository.dart';
-import '../../../data/interfaces/ai_service_interface.dart';
-import '../../../data/services/appwrite_ai_service.dart';
 import '../controllers/chat_controller.dart';
 
 class ChatBinding extends Bindings {
@@ -14,9 +12,7 @@ class ChatBinding extends Bindings {
     Get.lazyPut<ChatRepository>(
       () => ChatRepository(),
     );
-    Get.lazyPut<IAIService>(
-      () => AppwriteAIService(),
-    );
+    // IAIService is provided by InitialBinding
     Get.lazyPut<ChatController>(
       () => ChatController(),
     );

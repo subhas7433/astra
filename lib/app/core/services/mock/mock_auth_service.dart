@@ -187,6 +187,36 @@ class MockAuthService implements IAuthService {
   }
 
   @override
+  Future<Result<void, AppError>> resetPassword(String email) async {
+    // Delegate to sendPasswordRecovery
+    return sendPasswordRecovery(email);
+  }
+
+  @override
+  Future<Result<String, AppError>> signInWithGoogle() async {
+    await Future.delayed(_simulatedDelay);
+    AppLogger.debug('Mock: Signing in with Google', tag: _tag);
+
+    if (forceError) {
+      return Result.failure(forcedError ?? const NetworkError(
+        message: 'Simulated network error',
+      ));
+    }
+
+    // Simulate Google sign-in with a mock user
+    final userId = 'mock_google_user_${DateTime.now().millisecondsSinceEpoch}';
+    final email = 'google_user_$userId@mock.com';
+    _users[email] = {
+      'password': '',
+      'name': 'Google User',
+      'userId': userId,
+    };
+
+    _updateAuthState(userId);
+    return Result.success(userId);
+  }
+
+  @override
   Future<Result<void, AppError>> updatePassword({
     required String oldPassword,
     required String newPassword,

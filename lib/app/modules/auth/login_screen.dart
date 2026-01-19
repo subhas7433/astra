@@ -8,7 +8,6 @@ import '../../widgets/buttons/app_button.dart';
 import '../../widgets/feedback/error_box.dart';
 import '../../widgets/inputs/app_text_field.dart';
 import '../../widgets/inputs/password_field.dart';
-import '../../widgets/inputs/password_field.dart';
 import '../../data/services/guest_service.dart';
 import 'auth_controller.dart';
 
@@ -53,19 +52,14 @@ class LoginScreen extends GetView<AuthController> {
                     onPressed: controller.login,
                     isLoading: controller.isLoading,
                   )),
-              Obx(() => AppButton.primary(
-                    label: 'Sign In',
-                    onPressed: controller.login,
-                    isLoading: controller.isLoading,
-                  )),
               const SizedBox(height: AppDimensions.md),
 
               // Google Sign-In Button
-              Obx(() => AppButton.outline(
+              Obx(() => AppButton.secondary(
                     label: 'Sign in with Google',
                     onPressed: controller.signInWithGoogle,
                     isLoading: controller.isLoading,
-                    icon: Icons.g_mobiledata, // Or use a custom SVG icon
+                    leadingIcon: Icons.g_mobiledata, // Or use a custom SVG icon
                   )),
               const SizedBox(height: AppDimensions.lg),
 

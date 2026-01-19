@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../modules/paywall/bindings/paywall_binding.dart';
 import '../bindings/auth_binding.dart';
 import '../bindings/splash_binding.dart';
 import '../core/constants/app_colors.dart';
@@ -252,6 +253,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.paywall,
       page: () => const PaywallScreen(),
+      binding: PaywallBinding(),
       transition: Transition.downToUp, // Modal-like transition
       transitionDuration: transitionDuration,
     ),

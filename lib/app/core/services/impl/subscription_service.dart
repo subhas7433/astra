@@ -1,14 +1,23 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'monetization_analytics.dart';
+import '../../../data/services/monetization_analytics.dart';
+
+enum SubscriptionTier {
+  free,
+  basic,
+  pro,
+  premium,
+}
 
 class PaywallPackage {
   final String identifier;
   final String title;
   final String description;
   final String priceString;
+  final SubscriptionTier tier; // Added tier
   final Package? realPackage;
 
   PaywallPackage({
@@ -16,6 +25,7 @@ class PaywallPackage {
     required this.title,
     required this.description,
     required this.priceString,
+    required this.tier,
     this.realPackage,
   });
 }
@@ -30,9 +40,14 @@ class SubscriptionService extends GetxService {
   // Toggle this for testing
   final bool _isMockMode = true;
 
-  final isPremium = false.obs;
+  final currentTier = SubscriptionTier.free.obs;
   final packages = <PaywallPackage>[].obs;
   final isLoading = true.obs;
+
+  // Computed properties for feature gating
+  bool get isPremium => currentTier.value == SubscriptionTier.premium;
+  bool get isAdFree => currentTier.value != SubscriptionTier.free;
+  bool get hasUnlimitedChat => currentTier.value.index >= SubscriptionTier.pro.index;
 
   @override
   void onInit() {
@@ -67,8 +82,16 @@ class SubscriptionService extends GetxService {
   }
 
   void _updateCustomerStatus(CustomerInfo customerInfo) {
-    final entitlement = customerInfo.entitlements.all['premium'];
-    isPremium.value = entitlement?.isActive ?? false;
+    // Map entitlements to tiers
+    if (customerInfo.entitlements.all['premium_access']?.isActive ?? false) {
+      currentTier.value = SubscriptionTier.premium;
+    } else if (customerInfo.entitlements.all['pro_access']?.isActive ?? false) {
+      currentTier.value = SubscriptionTier.pro;
+    } else if (customerInfo.entitlements.all['basic_access']?.isActive ?? false) {
+      currentTier.value = SubscriptionTier.basic;
+    } else {
+      currentTier.value = SubscriptionTier.free;
+    }
   }
 
   Future<void> fetchOfferings() async {
@@ -79,27 +102,43 @@ class SubscriptionService extends GetxService {
         await Future.delayed(const Duration(seconds: 1));
         packages.value = [
           PaywallPackage(
-            identifier: 'monthly',
-            title: 'Monthly Access',
-            description: 'Unlimited chat & no ads',
-            priceString: '\$4.99',
+            identifier: 'monthly_basic',
+            title: 'Basic',
+            description: 'No Ads',
+            priceString: '\$2.99',
+            tier: SubscriptionTier.basic,
           ),
           PaywallPackage(
-            identifier: 'yearly',
-            title: 'Yearly Access',
-            description: 'Best value: Save 50%',
-            priceString: '\$29.99',
+            identifier: 'monthly_pro',
+            title: 'Pro',
+            description: 'Unlimited Chat + No Ads',
+            priceString: '\$5.99/mo',
+            tier: SubscriptionTier.pro,
+          ),
+          PaywallPackage(
+            identifier: 'monthly_premium',
+            title: 'Premium',
+            description: 'All Features + Priority Support',
+            priceString: '\$9.99/mo',
+            tier: SubscriptionTier.premium,
           ),
         ];
       } else {
         final offerings = await Purchases.getOfferings();
         if (offerings.current != null) {
           packages.value = offerings.current!.availablePackages.map((p) {
+            // Logically map package ID to tier, or use metadata if available
+            // For now, simple fallback
+            var tier = SubscriptionTier.premium;
+            if (p.identifier.contains('basic')) tier = SubscriptionTier.basic;
+            if (p.identifier.contains('pro')) tier = SubscriptionTier.pro;
+
             return PaywallPackage(
               identifier: p.identifier,
               title: p.storeProduct.title,
               description: p.storeProduct.description,
               priceString: p.storeProduct.priceString,
+              tier: tier,
               realPackage: p,
             );
           }).toList();
@@ -116,7 +155,7 @@ class SubscriptionService extends GetxService {
     try {
       if (_isMockMode) {
         await Future.delayed(const Duration(seconds: 2)); // Simulate purchase
-        isPremium.value = true;
+        currentTier.value = package.tier; // Upgrade directly in mock
         return true;
       } else {
         if (package.realPackage != null) {
@@ -126,7 +165,6 @@ class SubscriptionService extends GetxService {
           return true;
         }
       }
-      return false;
       return false;
     } on PlatformException catch (e) {
       var errorCode = PurchasesErrorHelper.getErrorCode(e);
@@ -162,7 +200,7 @@ class SubscriptionService extends GetxService {
     try {
       if (_isMockMode) {
         await Future.delayed(const Duration(seconds: 1));
-        isPremium.value = true;
+        currentTier.value = SubscriptionTier.premium; // Restore to max in mock
       } else {
         final customerInfo = await Purchases.restorePurchases();
         _updateCustomerStatus(customerInfo);
