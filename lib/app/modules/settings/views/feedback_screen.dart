@@ -40,9 +40,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingLg),
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -139,7 +141,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 );
               },
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

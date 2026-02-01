@@ -20,9 +20,11 @@ class AboutScreen extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingLg),
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
              const SizedBox(height: AppDimensions.paddingXl),
@@ -94,7 +96,8 @@ class AboutScreen extends StatelessWidget {
                '© 2025 Technoava',
                style: AppTypography.caption.copyWith(color: AppColors.textHint),
              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

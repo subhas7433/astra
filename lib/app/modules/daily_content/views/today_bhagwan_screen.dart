@@ -18,17 +18,19 @@ class TodayBhagwanScreen extends GetView<TodayBhagwanController> {
         title: const Text("Today's Bhagwan"),
         centerTitle: true,
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: SafeArea(
+        top: false,
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        final deity = controller.deity.value;
-        if (deity == null) {
-          return const Center(child: Text('No content available for today'));
-        }
+          final deity = controller.deity.value;
+          if (deity == null) {
+            return const Center(child: Text('No content available for today'));
+          }
 
-        return SingleChildScrollView(
+          return SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.paddingLg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,8 +107,9 @@ class TodayBhagwanScreen extends GetView<TodayBhagwanController> {
               const SizedBox(height: AppDimensions.paddingXl),
             ],
           ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

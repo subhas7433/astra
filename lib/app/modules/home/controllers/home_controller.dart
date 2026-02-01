@@ -2,22 +2,39 @@ import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
 
 import '../../../data/models/astrologer_model.dart';
+import '../../../data/models/mantra_model.dart';
+import '../../../data/models/deity_model.dart';
+import '../../../data/models/faq_model.dart';
 import '../../../data/repositories/astrologer_repository.dart';
+import '../../../data/repositories/daily_content_repository.dart';
+import '../../../data/repositories/faqs_repository.dart';
 
 class HomeController extends GetxController {
-  final AstrologerRepository _repository = Get.find<AstrologerRepository>();
+  final AstrologerRepository _astrologerRepo = Get.find<AstrologerRepository>();
+  final DailyContentRepository _dailyContentRepo = Get.find<DailyContentRepository>();
+  final FAQsRepository _faqsRepo = Get.find<FAQsRepository>();
 
   final isLoading = true.obs;
   final currentLocation = 'New Delhi, India'.obs;
   final notificationCount = 2.obs;
 
+  // Astrologers
   final selectedCategory = 'All'.obs;
   final categories = ['All', 'Career', 'Life', 'Love', 'Health'].obs;
-  final allAstrologers = <AstrologerModel>[].obs; // Store all loaded
-  final astrologers = <AstrologerModel>[].obs; // Displayed list
+  final allAstrologers = <AstrologerModel>[].obs;
+  final astrologers = <AstrologerModel>[].obs;
   final isMoreLoading = false.obs;
-  int _page = 1;
   final int _limit = 10;
+
+  // Daily Content
+  final todaysMantra = Rxn<MantraModel>();
+  final todaysDeity = Rxn<DeityModel>();
+  final isMantraLoading = false.obs;
+  final isDeityLoading = false.obs;
+
+  // FAQs
+  final mostAskedQuestions = <FAQModel>[].obs;
+  final isFaqsLoading = false.obs;
 
   @override
   void onInit() {
@@ -27,9 +44,20 @@ class HomeController extends GetxController {
 
   Future<void> fetchHomeData() async {
     isLoading.value = true;
-    _page = 1;
-    
-    final result = await _repository.getAstrologers(limit: _limit, offset: 0);
+
+    // Fetch all data in parallel
+    await Future.wait([
+      _fetchAstrologers(),
+      _fetchTodaysMantra(),
+      _fetchTodaysDeity(),
+      _fetchMostAskedQuestions(),
+    ]);
+
+    isLoading.value = false;
+  }
+
+  Future<void> _fetchAstrologers() async {
+    final result = await _astrologerRepo.getAstrologers(limit: _limit, offset: 0);
 
     result.fold(
       onSuccess: (success) {
@@ -37,11 +65,59 @@ class HomeController extends GetxController {
         _applyFilters();
       },
       onFailure: (failure) {
-        Get.snackbar('Error', failure.message);
+        // Silently fail for astrologers, show empty list
+        allAstrologers.clear();
+        astrologers.clear();
       },
     );
-    
-    isLoading.value = false;
+  }
+
+  Future<void> _fetchTodaysMantra() async {
+    isMantraLoading.value = true;
+    final result = await _dailyContentRepo.getTodaysMantra();
+
+    result.fold(
+      onSuccess: (mantra) {
+        todaysMantra.value = mantra;
+      },
+      onFailure: (failure) {
+        // Silently fail, mantra will be null
+        todaysMantra.value = null;
+      },
+    );
+    isMantraLoading.value = false;
+  }
+
+  Future<void> _fetchTodaysDeity() async {
+    isDeityLoading.value = true;
+    final result = await _dailyContentRepo.getTodaysBhagwan();
+
+    result.fold(
+      onSuccess: (deity) {
+        todaysDeity.value = deity;
+      },
+      onFailure: (failure) {
+        // Silently fail, deity will be null
+        todaysDeity.value = null;
+      },
+    );
+    isDeityLoading.value = false;
+  }
+
+  Future<void> _fetchMostAskedQuestions() async {
+    isFaqsLoading.value = true;
+    final result = await _faqsRepo.getMostAskedQuestions(limit: 5);
+
+    result.fold(
+      onSuccess: (faqs) {
+        mostAskedQuestions.value = faqs;
+      },
+      onFailure: (failure) {
+        // Silently fail, show empty list
+        mostAskedQuestions.clear();
+      },
+    );
+    isFaqsLoading.value = false;
   }
 
   void _applyFilters() {
@@ -49,10 +125,8 @@ class HomeController extends GetxController {
       astrologers.value = allAstrologers;
     } else {
       astrologers.value = allAstrologers.where((a) {
-        // Filter by specialization or category
-        // This is a simple string match for now
-        return a.specialization.contains(selectedCategory.value) || 
-               a.expertiseTags.any((tag) => tag.contains(selectedCategory.value));
+        return a.specialization.contains(selectedCategory.value) ||
+            a.expertiseTags.any((tag) => tag.contains(selectedCategory.value));
       }).toList();
     }
   }
@@ -65,11 +139,12 @@ class HomeController extends GetxController {
   Future<void> loadMoreAstrologers() async {
     if (isMoreLoading.value) return;
     isMoreLoading.value = true;
-    
-    // Simulate pagination by fetching more mock data
-    // In real app, use offset based on current list length
-    final result = await _repository.getAstrologers(limit: 5, offset: allAstrologers.length);
-    
+
+    final result = await _astrologerRepo.getAstrologers(
+      limit: 5,
+      offset: allAstrologers.length,
+    );
+
     result.fold(
       onSuccess: (success) {
         allAstrologers.addAll(success);
@@ -87,7 +162,6 @@ class HomeController extends GetxController {
     await fetchHomeData();
   }
 
-
   void onViewAll() {
     Get.toNamed(AppRoutes.astrologerList);
   }
@@ -101,8 +175,23 @@ class HomeController extends GetxController {
     // TODO: Open location picker
     print('Location tapped');
   }
-  
+
   void onSettingsTap() {
     Get.toNamed(AppRoutes.settings);
+  }
+
+  void onMantraTap() {
+    // TODO: Navigate to mantra detail or audio player
+    print('Mantra tapped');
+  }
+
+  void onDeityTap() {
+    // TODO: Navigate to deity detail
+    print('Deity tapped');
+  }
+
+  void onFaqTap(FAQModel faq) {
+    // TODO: Navigate to chat with this question pre-filled
+    print('FAQ tapped: ${faq.questionEnglish}');
   }
 }

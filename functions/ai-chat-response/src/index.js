@@ -1,50 +1,39 @@
-const sdk = require("node-appwrite");
-const OpenAI = require("openai");
+import { Client, Databases } from 'node-appwrite';
+import OpenAI from 'openai';
 
-/*
-  'req' variable has:
-    'headers' - object with request headers
-    'payload' - request body data as a string
-    'variables' - object with function variables
-
-  'res' variable has:
-    'send(text, status)' - function to return text response. Status code defaults to 200
-    'json(obj, status)' - function to return JSON response. Status code defaults to 200
-
-  If an error is thrown, a response with code 500 will be returned.
-*/
-
-module.exports = async function (req, res) {
-    const client = new sdk.Client();
-    const databases = new sdk.Databases(client);
-
-    // Initialize OpenAI
-    const openai = new OpenAI({
-        apiKey: req.variables.OPENAI_API_KEY,
-    });
-
-    if (
-        !req.variables.APPWRITE_FUNCTION_ENDPOINT ||
-        !req.variables.APPWRITE_FUNCTION_API_KEY
-    ) {
-        console.error("Appwrite Environment variables not set");
-        return res.json({
-            success: false,
-            error: "Server configuration error",
-        });
-    }
-
-    client
-        .setEndpoint(req.variables.APPWRITE_FUNCTION_ENDPOINT)
-        .setProject(req.variables.APPWRITE_FUNCTION_PROJECT_ID)
-        .setKey(req.variables.APPWRITE_FUNCTION_API_KEY);
-
+export default async ({ req, res, log, error }) => {
     try {
-        const payload = JSON.parse(req.payload ?? "{}");
+        // Initialize OpenAI
+        const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+
+        if (!process.env.OPENAI_API_KEY) {
+            log("OpenAI API key not configured");
+            return res.json({
+                success: false,
+                error: "OpenAI API key not configured",
+            });
+        }
+
+        // Try different ways to get the payload
+        let payload = {};
+        if (req.body) {
+            payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        } else if (req.bodyRaw) {
+            payload = JSON.parse(req.bodyRaw);
+        } else if (req.payload) {
+            payload = typeof req.payload === 'string' ? JSON.parse(req.payload) : req.payload;
+        }
+
         const { userId, astrologerId, message, sessionId, action } = payload;
 
-        // Handle Greeting Action
+        log("Received payload: " + JSON.stringify(payload));
+        log("Action value: " + action);
+
+        // Handle Greeting Action (no database needed)
         if (action === 'greeting') {
+            log("Processing greeting request");
             const prompt = `You are a Vedic Astrologer. Give a short, warm, spiritual greeting to a user. Do not ask for birth details yet.`;
             const completion = await openai.chat.completions.create({
                 model: "gpt-4",
@@ -57,6 +46,11 @@ module.exports = async function (req, res) {
             });
         }
 
+        // For chat messages, initialize Appwrite client
+        const endpoint = process.env.APPWRITE_ENDPOINT;
+        const projectId = process.env.APPWRITE_PROJECT_ID;
+        const databaseId = process.env.APPWRITE_DATABASE_ID;
+
         if (!message || !userId || !astrologerId) {
             return res.json({
                 success: false,
@@ -64,18 +58,36 @@ module.exports = async function (req, res) {
             });
         }
 
-        // 1. Fetch Astrologer Persona
-        // Assuming 'astrologers' collection exists
-        // const astrologerDoc = await databases.getDocument(
-        //   req.variables.APPWRITE_DATABASE_ID,
-        //   'astrologers',
-        //   astrologerId
-        // );
+        // Initialize Appwrite client (if needed for future use)
+        let astrologerPersona = "You are an experienced, empathetic Vedic Astrologer. You provide spiritual guidance based on Vedic principles.";
 
-        // For now, using a default persona if DB fetch is not ready/mocked
-        const basePersona = "You are an experienced, empathetic Vedic Astrologer. You provide spiritual guidance based on Vedic principles.";
+        if (endpoint && projectId && req.headers['x-appwrite-key']) {
+            try {
+                const client = new Client();
+                const databases = new Databases(client);
 
-        // 2. Content Moderation Guidelines
+                client
+                    .setEndpoint(endpoint)
+                    .setProject(projectId)
+                    .setKey(req.headers['x-appwrite-key']);
+
+                // Fetch astrologer persona
+                const astrologer = await databases.getDocument(
+                    databaseId,
+                    process.env.COLLECTION_ASTROLOGERS || 'astrologers',
+                    astrologerId
+                );
+
+                if (astrologer.aiPersonaPrompt) {
+                    astrologerPersona = astrologer.aiPersonaPrompt;
+                }
+            } catch (e) {
+                log("Could not fetch astrologer persona: " + e.message);
+                // Continue with default persona
+            }
+        }
+
+        // Content Moderation Guidelines
         const contentModerationRules = `
 IMPORTANT CONTENT MODERATION RULES:
 - NEVER provide medical advice or diagnose health conditions.
@@ -86,9 +98,9 @@ IMPORTANT CONTENT MODERATION RULES:
 - Avoid making definitive predictions about death, serious illness, or major negative events.
 `;
 
-        const systemPrompt = `${basePersona}\n\n${contentModerationRules}`;
+        const systemPrompt = `${astrologerPersona}\n\n${contentModerationRules}`;
 
-        // 3. Call OpenAI
+        // Call OpenAI
         const completion = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [
@@ -100,19 +112,15 @@ IMPORTANT CONTENT MODERATION RULES:
 
         const aiResponse = completion.choices[0].message.content;
 
-        // 4. (Optional) Save to Database History here or let Client do it
-        // Client-side saving is faster for UI, but Server-side is more secure.
-        // We'll return the response and let the client save it for now to match current architecture.
-
         return res.json({
             success: true,
             response: aiResponse,
         });
-    } catch (error) {
-        console.error("AI Error:", error);
+    } catch (err) {
+        error("AI Error: " + err.message);
         return res.json({
             success: false,
-            error: error.message || "Failed to generate response",
+            error: err.message || "Failed to generate response",
         });
     }
 };

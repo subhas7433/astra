@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_dimensions.dart';
 
 class HoroscopeProgressBar extends StatelessWidget {
   final double percentage; // 0.0 to 1.0

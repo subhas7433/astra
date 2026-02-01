@@ -48,6 +48,27 @@ class DailyContentModel extends Equatable {
     );
   }
 
+  /// Create DailyContentModel from FastAPI REST response (snake_case).
+  factory DailyContentModel.fromApiJson(Map<String, dynamic> json) {
+    return DailyContentModel(
+      id: json['id']?.toString() ?? '',
+      type: ContentType.fromString(json['type']?.toString()) ??
+          ContentType.mantra,
+      title: json['title']?.toString() ?? '',
+      titleHi: json['title_hi']?.toString(),
+      description: json['description']?.toString() ?? '',
+      descriptionHi: json['description_hi']?.toString(),
+      imageUrl: json['image_url']?.toString(),
+      audioUrl: json['audio_url']?.toString(),
+      validDate:
+          DateTime.tryParse(json['valid_date']?.toString() ?? '') ??
+              DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+              DateTime.now(),
+    );
+  }
+
   /// Convert to map for Appwrite storage.
   Map<String, dynamic> toMap() {
     return {

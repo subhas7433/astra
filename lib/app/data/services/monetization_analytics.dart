@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import '../../core/utils/app_logger.dart';
 
 class MonetizationAnalytics {

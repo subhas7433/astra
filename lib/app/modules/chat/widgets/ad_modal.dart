@@ -103,36 +103,6 @@ class AdModal extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.md),
 
-            // Remove Ads Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  Get.back();
-                  onRemoveAds();
-                },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.primary),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.star, color: AppColors.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Remove Ads',
-                      style: AppTypography.button.copyWith(color: AppColors.primary),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppDimensions.md),
-
             // No Thanks
             TextButton(
               onPressed: () => Get.back(),

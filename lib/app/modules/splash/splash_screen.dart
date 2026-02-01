@@ -15,8 +15,9 @@ class SplashScreen extends GetView<SplashController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
-        child: Column(
+      body: SafeArea(
+        child: Center(
+          child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // App Logo/Icon placeholder
@@ -62,8 +63,9 @@ class SplashScreen extends GetView<SplashController> {
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

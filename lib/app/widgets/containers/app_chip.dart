@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_typography.dart';
-import '../../core/theme/app_decorations.dart';
 
 class AppChip extends StatelessWidget {
   final String label;

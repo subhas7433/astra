@@ -1,6 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../core/result/result.dart';
-import '../../core/result/app_error.dart';
 import 'core/model_extensions.dart';
 
 class DeityModel extends Equatable {
@@ -26,17 +24,49 @@ class DeityModel extends Equatable {
     required this.date,
   });
 
+  /// Create DeityModel from FastAPI REST response (snake_case).
+  /// Maps from DailyContentResponse fields to deity-specific fields.
+  factory DeityModel.fromApiJson(Map<String, dynamic> json) {
+    return DeityModel(
+      id: json['id']?.toString() ?? '',
+      name: json['title']?.toString() ?? json['name']?.toString() ?? '',
+      nameHindi:
+          json['title_hi']?.toString() ?? json['name_hindi']?.toString() ?? '',
+      imageUrl: json['image_url']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      descriptionHindi: json['description_hi']?.toString() ?? '',
+      significance: json['significance']?.toString() ?? '',
+      mantra: json['mantra']?.toString() ?? '',
+      date: DateTime.tryParse(json['valid_date']?.toString() ?? '') ??
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+
+  /// Create DeityModel from Appwrite document map.
+  /// Supports both Appwrite field names (title/titleHi) and model field names (name/nameHindi).
   factory DeityModel.fromMap(Map<String, dynamic> map) {
+    // Handle field name mapping: Appwrite uses title/titleHi, model uses name/nameHindi
+    final name = map.getField<String>('name') ??
+                 map.getField<String>('title') ??
+                 '';
+    final nameHindi = map.getField<String>('nameHindi') ??
+                      map.getField<String>('titleHi') ??
+                      '';
+    final descriptionHindi = map.getField<String>('descriptionHindi') ??
+                             map.getField<String>('descriptionHi') ??
+                             '';
+
     return DeityModel(
       id: map.appwriteId,
-      name: map.getString('name'),
-      nameHindi: map.getString('nameHindi'),
+      name: name,
+      nameHindi: nameHindi,
       imageUrl: map.getString('imageUrl'),
       description: map.getString('description'),
-      descriptionHindi: map.getString('descriptionHindi'),
+      descriptionHindi: descriptionHindi,
       significance: map.getString('significance'),
       mantra: map.getString('mantra'),
-      date: map.getDateTime('date') ?? DateTime.now(),
+      date: map.getDateTime('date') ?? map.appwriteCreatedAt ?? DateTime.now(),
     );
   }
 

@@ -25,26 +25,27 @@ class AstrologerProfileController extends GetxController {
 
   Future<void> loadProfile(String id) async {
     isLoading.value = true;
-    
-    // Fetch Astrologer Details
-    // Note: AstrologerRepository doesn't have getById yet, so we'll simulate it or add it.
-    // For now, we'll assume we can pass the object or fetch from list if cached.
-    // Since we don't have getById, we'll fetch list and find (inefficient but works for now)
-    // Or better, we can add getById to repository.
-    
-    // Let's assume we pass the object via arguments if available, or fetch.
+
+    // Fetch Astrologer Details from Appwrite
     if (Get.arguments is AstrologerModel) {
+      // If passed as argument, use it immediately but still fetch fresh data
       astrologer.value = Get.arguments as AstrologerModel;
-    } else {
-      // Fallback: Fetch list and find (temporary solution until getById is added)
-      final result = await _astrologerRepository.getAstrologers(limit: 100);
-      result.fold(
-        onSuccess: (list) {
-          astrologer.value = list.firstWhereOrNull((a) => a.id == id);
-        },
-        onFailure: (error) => Get.snackbar('Error', error.message),
-      );
     }
+
+    // Fetch fresh data from Appwrite
+    final result = await _astrologerRepository.getAstrologerById(id);
+    result.fold(
+      onSuccess: (fetchedAstrologer) {
+        astrologer.value = fetchedAstrologer;
+      },
+      onFailure: (error) {
+        Get.snackbar('Error', error.message);
+        // If fetch fails and we don't have cached data, set null
+        if (Get.arguments is! AstrologerModel) {
+          astrologer.value = null;
+        }
+      },
+    );
 
     // Fetch Reviews
     if (astrologer.value != null) {
@@ -54,7 +55,7 @@ class AstrologerProfileController extends GetxController {
         onFailure: (error) => print('Failed to load reviews: ${error.message}'),
       );
     }
-    
+
     isLoading.value = false;
   }
 

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
-import '../../../widgets/buttons/icon_button_circle.dart';
 
 class TodayMantraCard extends StatefulWidget {
   final String mantra;

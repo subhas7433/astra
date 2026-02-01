@@ -57,6 +57,43 @@ class UserModel extends Equatable {
     );
   }
 
+  /// Create UserModel from FastAPI REST response (snake_case).
+  factory UserModel.fromApiJson(Map<String, dynamic> json) {
+    final dob = DateTime.tryParse(json['date_of_birth']?.toString() ?? '') ??
+        DateTime.now();
+    ZodiacSign? zodiac = ZodiacSign.fromString(json['zodiac_sign']?.toString());
+    zodiac ??= ZodiacSign.fromDate(dob);
+
+    return UserModel(
+      id: json['user_id']?.toString() ?? json['id']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      fullName: json['full_name']?.toString() ?? '',
+      gender: Gender.fromString(json['gender']?.toString()) ?? Gender.other,
+      dateOfBirth: dob,
+      zodiacSign: zodiac,
+      preferredLanguage: json['preferred_language']?.toString() ?? 'en',
+      profilePhotoUrl: json['profile_photo_url']?.toString(),
+      fcmToken: json['fcm_token']?.toString(),
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+
+  /// Convert to JSON for FastAPI REST requests (snake_case).
+  Map<String, dynamic> toApiJson() {
+    return {
+      'full_name': fullName,
+      'gender': gender.value,
+      'date_of_birth': dateOfBirth.toIso8601String().split('T').first,
+      'zodiac_sign': zodiacSign?.value,
+      'preferred_language': preferredLanguage,
+      'profile_photo_url': profilePhotoUrl,
+      'fcm_token': fcmToken,
+    };
+  }
+
   /// Convert to map for Appwrite storage.
   Map<String, dynamic> toMap() {
     return {

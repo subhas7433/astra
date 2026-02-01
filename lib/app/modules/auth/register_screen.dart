@@ -121,6 +121,27 @@ class RegisterScreen extends GetView<AuthController> {
         ),
         const SizedBox(height: AppDimensions.md),
 
+        // Date of Birth Field
+        Obx(() {
+          final dob = controller.dateOfBirth.value;
+          final displayText = dob != null
+              ? '${dob.day.toString().padLeft(2, '0')}/${dob.month.toString().padLeft(2, '0')}/${dob.year}'
+              : '';
+          return GestureDetector(
+            onTap: () => controller.pickDateOfBirth(Get.context!),
+            child: AbsorbPointer(
+              child: AppTextField(
+                label: 'Date of Birth',
+                hint: 'Select your date of birth',
+                controller: TextEditingController(text: displayText),
+                prefixIcon: Icons.cake_outlined,
+                textInputAction: TextInputAction.next,
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: AppDimensions.md),
+
         // Password Field
         PasswordField(
           label: 'Password',

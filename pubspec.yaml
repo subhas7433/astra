@@ -17,6 +17,7 @@ dependencies:
 
   # Backend
   appwrite: ^20.3.2
+  dio: ^5.4.0
 
   # Ads & Monetization
   google_mobile_ads: ^6.0.0

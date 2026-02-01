@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Appwrite Function for Astro GPT AI responses",
     "main": "src/index.js",
+    "type": "module",
     "dependencies": {
         "node-appwrite": "^11.0.0",
         "openai": "^4.20.1"

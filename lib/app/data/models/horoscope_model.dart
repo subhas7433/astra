@@ -62,7 +62,15 @@ class HoroscopeModel extends Equatable {
   });
 
   /// Create HoroscopeModel from Appwrite document map.
+  /// Supports both Appwrite field names (contentEn/contentHi) and legacy field names (predictionText/predictionTextHi).
   factory HoroscopeModel.fromMap(Map<String, dynamic> map) {
+    // Handle field name mapping: Appwrite uses contentEn/contentHi, model uses predictionText
+    final predictionText = map.getField<String>('contentEn') ??
+                           map.getField<String>('predictionText') ??
+                           '';
+    final predictionTextHi = map.getField<String>('contentHi') ??
+                             map.getField<String>('predictionTextHi');
+
     return HoroscopeModel(
       id: map.appwriteId,
       zodiacSign: ZodiacSign.fromString(map.getString('zodiacSign')) ??
@@ -71,25 +79,61 @@ class HoroscopeModel extends Equatable {
           PeriodType.daily,
       category: HoroscopeCategory.fromString(map.getString('category')) ??
           HoroscopeCategory.love,
-      predictionText: map.getString('predictionText'),
-      predictionTextHi: map.getField<String>('predictionTextHi'),
+      predictionText: predictionText,
+      predictionTextHi: predictionTextHi,
       tipText: map.getField<String>('tipText'),
       tipTextHi: map.getField<String>('tipTextHi'),
       energyLevel: map.getInt('energyLevel', defaultValue: 50),
-      
+
       lovePercentage: map.getInt('lovePercentage', defaultValue: 0),
       lovePrediction: map.getString('lovePrediction'),
       careerPercentage: map.getInt('careerPercentage', defaultValue: 0),
       careerPrediction: map.getString('careerPrediction'),
       healthPercentage: map.getInt('healthPercentage', defaultValue: 0),
       healthPrediction: map.getString('healthPrediction'),
-      
+
       luckyNumbers: List<int>.from(map['luckyNumbers'] ?? []),
       luckyColor: map.getString('luckyColor'),
       luckyTime: map.getString('luckyTime'),
-      
+
       validDate: map.getDateTime('validDate') ?? DateTime.now(),
       createdAt: map.appwriteCreatedAt ?? DateTime.now(),
+    );
+  }
+
+  /// Create HoroscopeModel from FastAPI REST response (snake_case).
+  factory HoroscopeModel.fromApiJson(Map<String, dynamic> json) {
+    return HoroscopeModel(
+      id: json['id']?.toString() ?? '',
+      zodiacSign:
+          ZodiacSign.fromString(json['zodiac_sign']?.toString()) ??
+              ZodiacSign.aries,
+      periodType:
+          PeriodType.fromString(json['period_type']?.toString()) ??
+              PeriodType.daily,
+      category:
+          HoroscopeCategory.fromString(json['category']?.toString()) ??
+              HoroscopeCategory.love,
+      predictionText: json['prediction_text']?.toString() ?? '',
+      predictionTextHi: json['prediction_text_hi']?.toString(),
+      tipText: json['tip_text']?.toString(),
+      tipTextHi: json['tip_text_hi']?.toString(),
+      energyLevel: (json['energy_level'] as num?)?.toInt() ?? 50,
+      lovePercentage: (json['love_percentage'] as num?)?.toInt() ?? 0,
+      lovePrediction: json['love_prediction']?.toString() ?? '',
+      careerPercentage: (json['career_percentage'] as num?)?.toInt() ?? 0,
+      careerPrediction: json['career_prediction']?.toString() ?? '',
+      healthPercentage: (json['health_percentage'] as num?)?.toInt() ?? 0,
+      healthPrediction: json['health_prediction']?.toString() ?? '',
+      luckyNumbers: List<int>.from(json['lucky_numbers'] ?? []),
+      luckyColor: json['lucky_color']?.toString() ?? '',
+      luckyTime: json['lucky_time']?.toString() ?? '',
+      validDate:
+          DateTime.tryParse(json['valid_date']?.toString() ?? '') ??
+              DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+              DateTime.now(),
     );
   }
 

@@ -1,55 +1,70 @@
 import 'package:get/get.dart';
+
 import '../../core/result/result.dart';
 import '../../core/result/app_error.dart';
+import '../../core/services/api_client.dart';
 import '../models/review_model.dart';
 
 class ReviewsRepository {
-  // final Databases _databases = Get.find<Databases>(); // Uncomment when Appwrite is fully set up
+  final ApiClient _api;
+
+  ReviewsRepository() : _api = Get.find<ApiClient>();
 
   Future<Result<List<ReviewModel>, AppError>> getReviewsByAstrologer(
     String astrologerId, {
     int limit = 10,
     int offset = 0,
   }) async {
-    try {
-      // Mock data for now
-      await Future.delayed(const Duration(milliseconds: 800));
-      return Result.success(_generateMockReviews(astrologerId, limit));
-    } catch (e) {
-      return Result.failure(UnknownError(message: e.toString()));
-    }
+    final result = await _api.get(
+      '/api/v1/astrologers/$astrologerId/reviews',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return result.fold(
+      onSuccess: (body) {
+        final list = body['data'] as List<dynamic>? ?? [];
+        final reviews = list
+            .map((e) => ReviewModel.fromApiJson(e as Map<String, dynamic>))
+            .toList();
+        return Result.success(reviews);
+      },
+      onFailure: (error) => Result.failure(error),
+    );
   }
 
   Future<Result<ReviewModel, AppError>> createReview(ReviewModel review) async {
-    try {
-      // Mock creation
-      await Future.delayed(const Duration(milliseconds: 1000));
-      return Result.success(review);
-    } catch (e) {
-      return Result.failure(UnknownError(message: e.toString()));
-    }
+    final result = await _api.post(
+      '/api/v1/reviews',
+      data: {
+        'astrologer_id': review.astrologerId,
+        'rating': review.rating,
+        'text': review.text,
+      },
+    );
+    return result.fold(
+      onSuccess: (body) {
+        final data = body['data'] as Map<String, dynamic>?;
+        if (data == null) {
+          return const Result.failure(
+            GeneralDatabaseError(message: 'Failed to create review'),
+          );
+        }
+        return Result.success(ReviewModel.fromApiJson(data));
+      },
+      onFailure: (error) => Result.failure(error),
+    );
   }
 
-  Future<Result<double, AppError>> getAverageRating(String astrologerId) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      return Result.success(4.8); // Mock average
-    } catch (e) {
-      return Result.failure(UnknownError(message: e.toString()));
-    }
-  }
-
-  List<ReviewModel> _generateMockReviews(String astrologerId, int count) {
-    return List.generate(count, (index) {
-      return ReviewModel(
-        id: 'review_$index',
-        astrologerId: astrologerId,
-        userId: 'user_$index',
-        userName: 'User ${index + 1}',
-        rating: 4 + (index % 2), // 4 or 5 stars
-        text: 'Great experience! Very accurate predictions and helpful advice.',
-        createdAt: DateTime.now().subtract(Duration(days: index * 2)),
-      );
-    });
+  Future<Result<double, AppError>> getAverageRating(
+      String astrologerId) async {
+    // The astrologer detail endpoint includes rating
+    final result = await _api.get('/api/v1/astrologers/$astrologerId');
+    return result.fold(
+      onSuccess: (body) {
+        final data = body['data'] as Map<String, dynamic>?;
+        final rating = (data?['rating'] as num?)?.toDouble() ?? 0.0;
+        return Result.success(rating);
+      },
+      onFailure: (error) => Result.failure(error),
+    );
   }
 }

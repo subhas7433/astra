@@ -57,7 +57,7 @@ class AppPages {
   /// Initial route when app starts
   static const HOME = '/home';
   static const ASTROLOGER_PROFILE = '/astrologer-profile';
-  static const String initial = AppRoutes.home;
+  static const String initial = AppRoutes.splash;
 
   /// Default page transition
   static const Transition defaultTransition = Transition.fadeIn;

@@ -4,6 +4,10 @@ import 'package:get/get.dart';
 import '../../controllers/base_controller.dart';
 import '../../core/services/interfaces/i_auth_service.dart';
 import '../../core/utils/app_logger.dart';
+import '../../data/services/guest_service.dart';
+import '../../data/repositories/user_repository.dart';
+import '../../data/models/user_model.dart';
+import '../../data/models/enums/gender.dart';
 import '../../routes/app_routes.dart';
 
 /// Authentication controller for login and registration.
@@ -35,6 +39,9 @@ class AuthController extends BaseController {
 
   /// Confirm password controller (for registration)
   final confirmPasswordController = TextEditingController();
+
+  /// Date of birth (for registration)
+  final Rxn<DateTime> dateOfBirth = Rxn<DateTime>();
 
   // ============ Form State ============
 
@@ -71,12 +78,12 @@ class AuthController extends BaseController {
       ),
       onSuccess: (userId) {
         AppLogger.info('Login successful: $userId', tag: _tag);
+        GuestService.to.exitGuestMode();
         _clearForms();
         Get.offAllNamed(AppRoutes.home);
       },
       onError: (error) {
         AppLogger.warning('Login failed: ${error.message}', tag: _tag);
-        // Error message is automatically set by executeWithState
       },
     );
   }
@@ -140,8 +147,28 @@ class AuthController extends BaseController {
         password: passwordController.text,
         name: nameController.text.trim(),
       ),
-      onSuccess: (userId) {
+      onSuccess: (userId) async {
         AppLogger.info('Registration successful: $userId', tag: _tag);
+        GuestService.to.exitGuestMode();
+
+        // Create user profile in backend
+        try {
+          final userRepo = UserRepository();
+          final now = DateTime.now();
+          final user = UserModel(
+            id: userId,
+            email: emailController.text.trim(),
+            fullName: nameController.text.trim(),
+            gender: Gender.other,
+            dateOfBirth: dateOfBirth.value!,
+            createdAt: now,
+            updatedAt: now,
+          );
+          await userRepo.createUser(user);
+        } catch (e) {
+          AppLogger.warning('Failed to create backend user profile: $e', tag: _tag);
+        }
+
         _clearForms();
         Get.offAllNamed(AppRoutes.home);
       },
@@ -193,6 +220,11 @@ class AuthController extends BaseController {
       return false;
     }
 
+    if (dateOfBirth.value == null) {
+      setError('Please select your date of birth');
+      return false;
+    }
+
     return true;
   }
 
@@ -214,6 +246,21 @@ class AuthController extends BaseController {
 
   // ============ Helpers ============
 
+  /// Open date picker for date of birth.
+  Future<void> pickDateOfBirth(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: dateOfBirth.value ?? DateTime(now.year - 25),
+      firstDate: DateTime(1920),
+      lastDate: now,
+      helpText: 'Select your date of birth',
+    );
+    if (picked != null) {
+      dateOfBirth.value = picked;
+    }
+  }
+
   /// Toggle password visibility.
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
@@ -232,6 +279,7 @@ class AuthController extends BaseController {
     confirmPasswordController.clear();
     isPasswordVisible.value = false;
     isConfirmPasswordVisible.value = false;
+    dateOfBirth.value = null;
   }
 
   @override

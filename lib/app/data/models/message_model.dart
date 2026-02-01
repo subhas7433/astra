@@ -36,6 +36,22 @@ class MessageModel extends Equatable {
     );
   }
 
+  /// Create MessageModel from FastAPI REST response (snake_case).
+  factory MessageModel.fromApiJson(Map<String, dynamic> json) {
+    return MessageModel(
+      id: json['id']?.toString() ?? '',
+      sessionId: json['session_id']?.toString() ?? '',
+      senderType:
+          SenderType.fromString(json['sender_type']?.toString()) ??
+              SenderType.user,
+      content: json['content']?.toString() ?? '',
+      isRead: json['is_read'] as bool? ?? false,
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+              DateTime.now(),
+    );
+  }
+
   /// Convert to map for Appwrite storage.
   Map<String, dynamic> toMap() {
     return {

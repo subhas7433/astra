@@ -25,8 +25,10 @@ class FavoritesScreen extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
       ),
-      body: Obx(() {
-        if (controller.favorites.isEmpty) {
+      body: SafeArea(
+        top: false,
+        child: Obx(() {
+          if (controller.favorites.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -64,8 +66,9 @@ class FavoritesScreen extends StatelessWidget {
               ),
             );
           },
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

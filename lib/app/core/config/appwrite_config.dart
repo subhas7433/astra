@@ -18,10 +18,14 @@ class AppwriteConfig {
   /// Database ID for this app
   final String databaseId;
 
+  /// FastAPI backend base URL
+  final String apiBaseUrl;
+
   const AppwriteConfig({
     required this.endpoint,
     required this.projectId,
     required this.databaseId,
+    required this.apiBaseUrl,
   });
 
   /// Load configuration from .env file
@@ -30,6 +34,7 @@ class AppwriteConfig {
       endpoint: dotenv.env['APPWRITE_ENDPOINT'] ?? 'https://cloud.appwrite.io/v1',
       projectId: dotenv.env['APPWRITE_PROJECT_ID'] ?? '',
       databaseId: dotenv.env['APPWRITE_DATABASE_ID'] ?? 'astro_gpt_db',
+      apiBaseUrl: dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000',
     );
   }
 
@@ -39,6 +44,7 @@ class AppwriteConfig {
       endpoint: 'https://test.appwrite.io/v1',
       projectId: 'test_project',
       databaseId: 'test_db',
+      apiBaseUrl: 'http://localhost:8000',
     );
   }
 
@@ -47,5 +53,5 @@ class AppwriteConfig {
 
   @override
   String toString() =>
-      'AppwriteConfig(endpoint: $endpoint, projectId: $projectId, databaseId: $databaseId)';
+      'AppwriteConfig(endpoint: $endpoint, projectId: $projectId, databaseId: $databaseId, apiBaseUrl: $apiBaseUrl)';
 }

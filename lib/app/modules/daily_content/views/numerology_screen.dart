@@ -16,9 +16,11 @@ class NumerologyScreen extends GetView<NumerologyController> {
         title: const Text('Numerology'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingLg),
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Input Section
@@ -166,7 +168,8 @@ class NumerologyScreen extends GetView<NumerologyController> {
                 ],
               );
             }),
-          ],
+            ],
+          ),
         ),
       ),
     );

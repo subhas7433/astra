@@ -20,9 +20,11 @@ class TermsScreen extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingLg),
-        child: Text(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          child: Text(
           '''
 1. Acceptance of Terms
 By accessing or using Astra, you agree to be bound by these Terms of Service.
@@ -39,7 +41,8 @@ You agree not to misuse our services or harass our astrologers.
 5. Termination
 We reserve the right to terminate or suspend your account at our sole discretion.
           ''',
-          style: AppTextStyles.bodyLarge,
+            style: AppTextStyles.bodyLarge,
+          ),
         ),
       ),
     );

@@ -105,6 +105,29 @@ The `core_docs_v2/` folder contains comprehensive project documentation:
 - GetX naming conventions (Controller suffix, Binding suffix)
 - Feature-based folder structure
 
+---
+
+## VPS Infrastructure Credentials
+
+### Production VPS (Contabo)
+- **IP Address:** 82.197.64.20
+- **Username:** root
+- **Password:** yb4BYq8DUqo5c3GNx66rTWr0ix
+- **SSH Access:** `ssh root@82.197.64.20`
+- **aaPanel:** https://82.197.64.20:7800
+
+### Services Running on VPS
+- MySQL (port 3306)
+- MongoDB (port 27017)
+- Nginx (ports 80, 443)
+- n8n, avabot-ai, Python services
+- Docker daemon
+
+### Notes
+- 6GB RAM VPS (5.8GB usable)
+- Self-hosted Appwrite removed due to resource constraints
+- Consider FastAPI backend as lightweight alternative
+
 
 
 # core_docs - Project Documentation Structure

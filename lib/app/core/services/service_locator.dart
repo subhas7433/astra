@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../config/appwrite_config.dart';
 import '../utils/app_logger.dart';
 import '../../data/providers/appwrite_client_provider.dart';
+import 'api_client.dart';
 import 'interfaces/i_auth_service.dart';
 import 'interfaces/i_database_service.dart';
 import 'interfaces/i_storage_service.dart';
@@ -78,6 +79,10 @@ class ServiceLocator {
     final clientProvider = AppwriteClientProvider(appwriteConfig);
     Get.put<AppwriteClientProvider>(clientProvider, permanent: true);
 
+    // Initialize REST API client (Dio + JWT)
+    final apiClient = ApiClient.init(clientProvider, appwriteConfig);
+    Get.put<ApiClient>(apiClient, permanent: true);
+
     // Register services as GetxService (permanent by default)
     Get.put<IAuthService>(
       AppwriteAuthService.init(clientProvider),
@@ -129,6 +134,9 @@ class ServiceLocator {
     AppLogger.debug('Resetting all services', tag: _tag);
 
     // Delete existing services
+    if (Get.isRegistered<ApiClient>()) {
+      Get.delete<ApiClient>(force: true);
+    }
     if (Get.isRegistered<IAuthService>()) {
       Get.delete<IAuthService>(force: true);
     }
@@ -151,6 +159,7 @@ class ServiceLocator {
 
   /// Convenience getters for services
   /// Convenience getters for services
+  static ApiClient get api => Get.find<ApiClient>();
   static IAuthService get auth => Get.find<IAuthService>();
   static IDatabaseService get database => Get.find<IDatabaseService>();
   static IStorageService get storage => Get.find<IStorageService>();

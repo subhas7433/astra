@@ -4,11 +4,152 @@
 **Project**: Astro GPT - AI-Powered Astrology Companion
 **Tech Stack**: Flutter 3.x + Dart 3.x + GetX + Appwrite Cloud + AdMob + RevenueCat
 **Primary Goal**: Mobile app providing AI-powered astrology consultations, daily horoscopes, and spiritual guidance
-**Last Updated**: November 26, 2025
+**Last Updated**: January 20, 2026
+
+---
+
+## Critical Problems Solved
+
+### 2026-01-20 - Today's Bhagwan Page Not Displaying Images and Significance
+
+**Problem**: On the "Today's Bhagwan" (deity) detail page, only the deity name and description were showing. The deity image displayed a broken placeholder icon, and the "Significance" section was empty despite having a section header.
+
+**Root Cause**: The Appwrite `daily_content` collection was seeded with incomplete deity data. The seeding script (`scripts/seed_all_data.py`) only inserted basic fields (`title`, `titleHi`, `description`, `descriptionHi`) but was missing:
+- `imageUrl` - Deity image URLs (field existed but had `null` values)
+- `significance` - Explanation of the deity's importance (attribute didn't exist in schema)
+- `mantra` - Sacred mantra for the deity (attribute didn't exist in schema)
+
+The frontend DeityModel expected these fields, but they were null or missing in the database.
+
+**Solution**: Three-step fix implemented:
+1. **Updated seeding data**: Added complete data for all 10 deities in `DEITIES` array with:
+   - High-quality free deity images from Unsplash (https://unsplash.com/s/photos/hindu-deity)
+   - Detailed significance text explaining when and why to worship each deity
+   - Authentic mantras (e.g., "Om Gam Ganapataye Namaha" for Lord Ganesha)
+
+2. **Updated Appwrite schema**: Added missing attributes to `daily_content` collection:
+   - `significance` (string, max 2000 chars, optional)
+   - `mantra` (string, max 500 chars, optional)
+   - `imageUrl` already existed but had null values
+
+3. **Re-seeded database**:
+   - Deleted 10 old incomplete deity records
+   - Inserted 10 complete deity records with all fields populated
+   - Set Lord Ganesha as today's deity (2026-01-20) in `today_content` collection
+
+**Result**:
+- Deity images now display correctly from Unsplash
+- Significance section shows complete explanatory text
+- Mantras display in the deity card
+- All 10 Hindu deities (Ganesha, Lakshmi, Shiva, Vishnu, Durga, Hanuman, Saraswati, Krishna, Rama, Surya) have complete data
+
+**Files Modified**:
+- `scripts/seed_all_data.py` - Updated DEITIES array with imageUrl, significance, mantra fields
+- `scripts/seed_all_data.py` - Updated deity seeding function to insert new fields
+- Appwrite `daily_content` collection schema - Added significance and mantra attributes
+- Created `/tmp/reseed_deities.py` - Standalone script for re-seeding
+- Created `/tmp/add_deity_attributes.py` - Script to add schema attributes
+- Created `/tmp/set_today_deity.py` - Script to set today's featured deity
+
+**Image Sources**: All deity images sourced from Unsplash (free, no attribution required):
+- Lord Ganesha: https://images.unsplash.com/photo-1567591370504-80142b28f1c1
+- Goddess Lakshmi: https://images.unsplash.com/photo-1604424167228-7269452c8e82
+- Lord Shiva: https://images.unsplash.com/photo-1582735689369-4fe89db7114c
+- And 7 more deities with unique Unsplash URLs
+
+---
+
+### 2026-01-19 - Flutter CLI Cannot Find APK with AGP 8.9.x
+
+**Problem**: `flutter run` fails with "Gradle build failed to produce an .apk file" even though Gradle builds successfully and APK exists at `android/app/build/outputs/apk/debug/app-debug.apk`
+
+**Root Cause**: Flutter CLI looks for APK in `build/app/outputs/flutter-apk/` but AGP 8.9.x with Kotlin DSL outputs to a different location. Flutter's copy logic is not triggered with modern AGP plugin DSL.
+
+**Solution**: Add a sync task in `android/app/build.gradle.kts` to copy APKs to the expected Flutter CLI location:
+
+```kotlin
+// Workaround for Flutter CLI not finding APK with AGP 8.9.x
+// See: https://github.com/flutter/flutter/issues/174620
+val flutterOutDir = file("$buildDir/outputs/flutter-apk")
+val cliOutDir = file("${rootDir.parentFile}/build/app/outputs/flutter-apk")
+
+tasks.register<Copy>("syncFlutterApks") {
+    from(flutterOutDir)
+    into(cliOutDir)
+    doFirst {
+        cliOutDir.mkdirs()
+    }
+}
+
+android.applicationVariants.all {
+    val variantName = name.replaceFirstChar { it.uppercase() }
+    listOf("package$variantName", "assemble$variantName").forEach { taskName ->
+        tasks.matching { it.name == taskName }.configureEach {
+            finalizedBy(tasks.named("syncFlutterApks"))
+        }
+    }
+}
+```
+
+**Result**: Standard `flutter run` now works with hot reload and hot restart support.
+
+**Files Modified**: `android/app/build.gradle.kts`
+
+**Reference**: https://github.com/flutter/flutter/issues/174620
 
 ---
 
 ## Major Achievements Completed
+
+### 2026-01-20 - Home Screen & Daily Content Appwrite Integration Complete
+**Status**: Complete - 100% Implementation
+**Impact**: Frontend-Backend Integration / Data Repositories / Content Display
+**Achievement**: Successfully integrated home screen and daily content (mantras, deities, FAQs) with Appwrite backend, replacing all mock data with live database queries.
+
+#### What Was Built
+- **Data Repositories**: Completed implementation of 4 repositories with Appwrite integration
+  - `DailyContentRepository` - Fetches today's mantra and deity using two-step query (today_content → daily_content)
+  - `FAQsRepository` - Fetches most asked questions with pagination
+  - `AstrologerRepository` - Already completed with getById and list methods
+  - `HoroscopeRepository` - Partially completed for future horoscope feature
+- **Home Controller**: Updated to fetch all data in parallel (astrologers, mantra, deity, FAQs)
+- **Home Screen UI**: Connected all sections to dynamic data with Obx() reactivity
+- **Deity Detail Page**: Fixed missing image and significance data by re-seeding database
+
+#### Data Flow Implemented
+```
+HomeScreen → HomeController → Repositories → IDatabaseService → Appwrite Cloud
+   ↓              ↓                ↓
+  Obx()     RxList/Rxn      Result<T, AppError>
+```
+
+#### Files Modified/Created
+| File | Purpose | Changes |
+|------|---------|---------|
+| `lib/app/data/repositories/daily_content_repository.dart` | Mantra/Deity fetching | Implemented getTodaysMantra() and getTodaysBhagwan() with two-step query |
+| `lib/app/data/repositories/faqs_repository.dart` | FAQ fetching | Implemented getMostAskedQuestions() with Query filters |
+| `lib/app/data/models/faq_model.dart` | FAQ data model | Created complete model with fromMap() |
+| `lib/app/modules/home/controllers/home_controller.dart` | Home data management | Added 3 new repositories, parallel data fetching |
+| `lib/app/modules/home/bindings/home_binding.dart` | DI registration | Registered DailyContentRepository and FAQsRepository |
+| `lib/app/modules/home/views/home_screen.dart` | Home UI | Wrapped all sections with Obx() for reactivity |
+| `scripts/seed_all_data.py` | Database seeding | Added imageUrl, significance, mantra to DEITIES array |
+
+#### Database Seeding Completed
+- **30 Astrologers**: Complete profiles with photos, specialties, languages, ratings
+- **10 Deities**: Complete data with Unsplash images, significance text, mantras
+- **10 Mantras**: Sanskrit text with English/Hindi meanings
+- **20 FAQs**: Most asked questions in English and Hindi
+- **today_content**: Set Lord Ganesha as featured deity for 2026-01-20
+
+#### Verification Results
+- Home screen loads all data from Appwrite successfully
+- Pull-to-refresh works correctly (fixed widget tree ordering)
+- Astrologer profile page displays complete data (name, bio, tags, languages, rating)
+- Today's Bhagwan page shows deity image, description, mantra, and significance
+- All images load from Unsplash CDN
+- No console errors or data fetching failures
+
+---
 
 ### 2025-11-26 - Week 1 Session 3: Appwrite Service Layer Complete
 **Status**: Complete - 100% Implementation

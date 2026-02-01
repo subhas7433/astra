@@ -19,6 +19,21 @@ class ReviewModel extends Equatable {
     required this.createdAt,
   });
 
+  /// Create ReviewModel from FastAPI REST response (snake_case).
+  factory ReviewModel.fromApiJson(Map<String, dynamic> json) {
+    return ReviewModel(
+      id: json['id']?.toString() ?? '',
+      astrologerId: json['astrologer_id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      userName: json['user_name']?.toString() ?? 'Anonymous',
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
+      text: json['text']?.toString() ?? '',
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+              DateTime.now(),
+    );
+  }
+
   factory ReviewModel.fromMap(Map<String, dynamic> map) {
     return ReviewModel(
       id: map['id'] ?? '',

@@ -1,92 +1,55 @@
+import 'package:get/get.dart';
+
 import '../models/astrologer_model.dart';
-import '../models/enums/astrologer_category.dart';
 import '../../core/result/result.dart';
 import '../../core/result/app_error.dart';
+import '../../core/services/api_client.dart';
 
 class AstrologerRepository {
-  // final Databases _databases = Get.find<Databases>(); // Uncomment when Appwrite is fully set up
+  final ApiClient _api;
 
-  // Collection ID (Replace with actual ID)
-  static const String collectionId = 'astrologers';
-  static const String databaseId = 'astra_db';
+  AstrologerRepository() : _api = Get.find<ApiClient>();
 
   Future<Result<List<AstrologerModel>, AppError>> getAstrologers({
     int limit = 20,
     int offset = 0,
+    String? category,
   }) async {
-    try {
-      // Mock data for now - Uncomment Appwrite code when backend is ready
-      await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
-
-      final mockAstrologers = _generateMockAstrologers();
-      final paginatedList = mockAstrologers.skip(offset).take(limit).toList();
-
-      return Result.success(paginatedList);
-    } catch (e, stack) {
-      return Result.failure(UnknownError(
-        message: 'Unexpected error: $e',
-        originalError: e,
-        stackTrace: stack,
-      ));
+    final params = <String, dynamic>{
+      'limit': limit,
+      'offset': offset,
+      'is_active': true,
+    };
+    if (category != null && category.isNotEmpty && category != 'all') {
+      params['category'] = category;
     }
+
+    final result = await _api.get('/api/v1/astrologers', queryParameters: params);
+    return result.fold(
+      onSuccess: (body) {
+        final list = body['data'] as List<dynamic>? ?? [];
+        final astrologers = list
+            .map((e) => AstrologerModel.fromApiJson(e as Map<String, dynamic>))
+            .toList();
+        return Result.success(astrologers);
+      },
+      onFailure: (error) => Result.failure(error),
+    );
   }
 
   Future<Result<AstrologerModel, AppError>> getAstrologerById(String id) async {
-    try {
-      // Mock data for now
-      await Future.delayed(const Duration(milliseconds: 300)); // Simulate network delay
-
-      final mockAstrologers = _generateMockAstrologers();
-      final astrologer = mockAstrologers.firstWhere(
-        (a) => a.id == id,
-        orElse: () => mockAstrologers.first,
-      );
-
-      return Result.success(astrologer);
-    } catch (e, stack) {
-      return Result.failure(UnknownError(
-        message: 'Unexpected error: $e',
-        originalError: e,
-        stackTrace: stack,
-      ));
-    }
-  }
-
-  List<AstrologerModel> _generateMockAstrologers() {
-    // Using real astrologer IDs from Appwrite database
-    return [
-      AstrologerModel(
-        id: 'test-astrologer',
-        name: 'Pandit Sharma',
-        photoUrl: 'https://example.com/photo.jpg',
-        bio: 'Expert Vedic astrologer with 20 years of experience in horoscope reading and spiritual guidance.',
-        specialization: 'Vedic Astrology',
-        expertiseTags: ['Vedic', 'Career', 'Love'],
-        languages: ['Hindi', 'English'],
-        rating: 4.8,
-        reviewCount: 150,
-        chatCount: 500,
-        category: AstrologerCategory.life,
-        isActive: true,
-        displayOrder: 1,
-        createdAt: DateTime.now().subtract(const Duration(days: 365)),
-      ),
-      AstrologerModel(
-        id: 'test-astrologer-001',
-        name: 'Mystic Maya',
-        photoUrl: 'https://example.com/maya.jpg',
-        bio: 'A gifted astrologer with 15 years of experience in Vedic astrology. Specializes in relationship guidance and career predictions.',
-        specialization: 'Vedic Astrology',
-        expertiseTags: ['Relationships', 'Career', 'Guidance'],
-        languages: ['Hindi', 'English'],
-        rating: 4.9,
-        reviewCount: 0,
-        chatCount: 0,
-        category: AstrologerCategory.love,
-        isActive: true,
-        displayOrder: 2,
-        createdAt: DateTime.now().subtract(const Duration(days: 300)),
-      ),
-    ];
+    final result = await _api.get('/api/v1/astrologers/$id');
+    return result.fold(
+      onSuccess: (body) {
+        final data = body['data'] as Map<String, dynamic>?;
+        if (data == null) {
+          return const Result.failure(
+            DocumentNotFoundError(message: 'Astrologer not found'),
+          );
+        }
+        return Result.success(AstrologerModel.fromApiJson(data));
+      },
+      onFailure: (error) => Result.failure(error),
+    );
   }
 }

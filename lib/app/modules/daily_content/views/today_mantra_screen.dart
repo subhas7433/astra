@@ -18,17 +18,19 @@ class TodayMantraScreen extends GetView<TodayMantraController> {
         title: const Text("Today's Mantra"),
         centerTitle: true,
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: SafeArea(
+        top: false,
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        final mantra = controller.mantra.value;
-        if (mantra == null) {
-          return const Center(child: Text('No mantra available for today'));
-        }
+          final mantra = controller.mantra.value;
+          if (mantra == null) {
+            return const Center(child: Text('No mantra available for today'));
+          }
 
-        return SingleChildScrollView(
+          return SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.paddingLg),
           child: Column(
             children: [
@@ -59,8 +61,9 @@ class TodayMantraScreen extends GetView<TodayMantraController> {
               const SizedBox(height: AppDimensions.paddingXl),
             ],
           ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

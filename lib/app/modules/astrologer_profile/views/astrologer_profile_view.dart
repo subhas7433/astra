@@ -48,7 +48,7 @@ class AstrologerProfileView extends GetView<AstrologerProfileController> {
           // 3. Info Sheet (Scrollable)
           Positioned.fill(
             top: Get.height * 0.4, // Start from 40% down
-            child: ProfileInfoSheet(controller: controller),
+            child: const ProfileInfoSheet(),
           ),
 
           // 4. Bottom Action Bar
@@ -59,48 +59,51 @@ class AstrologerProfileView extends GetView<AstrologerProfileController> {
             child: Container(
               padding: const EdgeInsets.all(AppDimensions.paddingMd),
               color: const Color(0xFFFFF3E0), // Match background
-              child: Row(
-                children: [
-                  // Chat Button
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: controller.startChat,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.chat_bubble_outline, color: Colors.white),
-                          const SizedBox(width: AppDimensions.sm),
-                          Text(
-                            'Chat',
-                            style: AppTypography.button.copyWith(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  children: [
+                    // Chat Button
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: controller.startChat,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                           ),
-                        ],
+                          elevation: 0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.chat_bubble_outline, color: Colors.white),
+                            const SizedBox(width: AppDimensions.sm),
+                            Text(
+                              'Chat',
+                              style: AppTypography.button.copyWith(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppDimensions.md),
+                    const SizedBox(width: AppDimensions.md),
 
-                  // Favorite Button
-                  Obx(() => IconButton(
-                    onPressed: controller.toggleFavorite,
-                    icon: Icon(
-                      controller.isFavorite.value ? Icons.favorite : Icons.favorite_border,
-                      color: AppColors.primary,
-                      size: 32,
-                    ),
-                  )),
-                ],
+                    // Favorite Button
+                    Obx(() => IconButton(
+                      onPressed: controller.toggleFavorite,
+                      icon: Icon(
+                        controller.isFavorite.value ? Icons.favorite : Icons.favorite_border,
+                        color: AppColors.primary,
+                        size: 32,
+                      ),
+                    )),
+                  ],
+                ),
               ),
             ),
           ),

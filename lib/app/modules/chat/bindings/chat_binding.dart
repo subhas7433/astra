@@ -12,7 +12,6 @@ class ChatBinding extends Bindings {
     Get.lazyPut<ChatRepository>(
       () => ChatRepository(),
     );
-    // IAIService is provided by InitialBinding
     Get.lazyPut<ChatController>(
       () => ChatController(),
     );

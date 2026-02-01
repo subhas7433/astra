@@ -18,6 +18,12 @@
   /Users/subhas/Work/flutter/bin/flutter devices
 
 
+Run on real device - /Users/subhas/Work/flutter/bin/flutter run -d adb-7abcedd6-y1MCSw._adb-tls-connect._tcp
+
+
+
+
+
 
   Ad units - 
   App open - ca-app-pub-2063094445044192/3844172313

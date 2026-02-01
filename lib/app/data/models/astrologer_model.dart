@@ -66,6 +66,32 @@ class AstrologerModel extends Equatable {
     );
   }
 
+  /// Create AstrologerModel from FastAPI REST response (snake_case).
+  factory AstrologerModel.fromApiJson(Map<String, dynamic> json) {
+    return AstrologerModel(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      photoUrl: json['photo_url']?.toString() ?? '',
+      heroImageUrl: json['hero_image_url']?.toString(),
+      bio: json['bio']?.toString() ?? '',
+      specialization: json['specialization']?.toString() ?? '',
+      expertiseTags: List<String>.from(json['expertise_tags'] ?? []),
+      languages: List<String>.from(json['languages'] ?? []),
+      rating: _parseDouble(json['rating']) ?? 0.0,
+      reviewCount: _parseInt(json['review_count']) ?? 0,
+      chatCount: _parseInt(json['chat_count']) ?? 0,
+      category:
+          AstrologerCategory.fromString(json['category']?.toString()) ??
+              AstrologerCategory.all,
+      isActive: json['is_active'] as bool? ?? true,
+      aiPersonaPrompt: json['ai_persona_prompt']?.toString(),
+      displayOrder: _parseInt(json['display_order']) ?? 0,
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+              DateTime.now(),
+    );
+  }
+
   /// Convert to map for Appwrite storage.
   Map<String, dynamic> toMap() {
     return {
@@ -286,4 +312,20 @@ class AstrologerModel extends Equatable {
   @override
   String toString() =>
       'AstrologerModel(id: $id, name: $name, category: ${category.displayName})';
+
+  /// Helper method to parse a value as double (handles both string and numeric types)
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  /// Helper method to parse a value as int (handles both string and numeric types)
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
 }

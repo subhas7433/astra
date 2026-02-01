@@ -3,22 +3,19 @@ import 'package:get/get.dart';
 import '../../../data/models/astrologer_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../../data/models/enums/sender_type.dart';
-import '../../../core/services/interfaces/i_ai_service.dart';
 import '../../../core/services/impl/ad_service.dart';
 import '../../../core/services/impl/subscription_service.dart';
+import '../../../core/services/interfaces/i_auth_service.dart';
 import '../../../data/repositories/astrologer_repository.dart';
 import '../../../data/repositories/chat_repository.dart';
 import '../widgets/ad_modal.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../data/services/guest_service.dart';
-import '../../../core/services/interfaces/i_auth_service.dart';
 
 class ChatController extends GetxController {
   final AstrologerRepository _astrologerRepository = Get.find<AstrologerRepository>();
   final ChatRepository _chatRepository = Get.find<ChatRepository>();
   final AdService _adService = Get.find<AdService>();
-  final IAIService _aiService = Get.find<IAIService>();
-  final IAuthService _authService = Get.find<IAuthService>();
+
 
   final astrologer = Rxn<AstrologerModel>();
   final isLoading = true.obs;
@@ -49,80 +46,66 @@ class ChatController extends GetxController {
 
   Future<void> loadAstrologer(String id) async {
     isLoading.value = true;
-    
-    // Fetch Astrologer
-    // Assuming we can get by ID or find in list
-    final result = await _astrologerRepository.getAstrologers(limit: 100);
+
+    // Fetch astrologer by ID
+    final result = await _astrologerRepository.getAstrologerById(id);
     result.fold(
-      onSuccess: (list) {
-        astrologer.value = list.firstWhereOrNull((a) => a.id == id);
-      },
+      onSuccess: (a) => astrologer.value = a,
       onFailure: (error) => Get.snackbar('Error', error.message),
     );
 
     if (astrologer.value == null) {
-      // Fallback mock if not found (for safety during dev)
-      // In real app, handle error or redirect
+      isLoading.value = false;
+      return;
     }
 
-    // Initialize Session
-    final sessionResult = await _chatRepository.createSession(id);
-    sessionResult.fold(
-      onSuccess: (sessionId) {
-        _sessionId = sessionId;
-        _loadMessages(sessionId);
-      },
-      onFailure: (error) => Get.snackbar('Error', 'Failed to start chat session'),
-    );
-    
+    // Initialize Session via REST
+    final userId = Get.find<IAuthService>().currentUserId;
+    final sessionResult = await _chatRepository.createSession(id, userId: userId);
+    if (sessionResult.isSuccess) {
+      _sessionId = sessionResult.valueOrNull!;
+      await _loadMessages(_sessionId!);
+    } else {
+      Get.snackbar('Error', 'Failed to start chat session');
+    }
+
     isLoading.value = false;
   }
 
   Future<void> _loadMessages(String sessionId) async {
     final result = await _chatRepository.getMessages(sessionId);
-    result.fold(
-      onSuccess: (list) {
-        messages.assignAll(list);
-        if (messages.isEmpty) {
-          // Add welcome message if empty
-          // Fetch greeting from AI Service
-          _fetchGreeting();
-        }
-        scrollToBottom();
-      },
-      onFailure: (error) => Get.snackbar('Error', 'Failed to load messages'),
-    );
+    if (result.isSuccess) {
+      final list = result.valueOrNull!;
+      messages.assignAll(list);
+      if (messages.isEmpty) {
+        await _fetchGreeting();
+      }
+      scrollToBottom();
+    } else {
+      Get.snackbar('Error', 'Failed to load messages');
+    }
   }
 
   Future<void> _fetchGreeting() async {
-    final userId = _authService.currentUserId ?? 'guest';
-    final result = await _aiService.getGreeting(
-      userId: userId, 
-      astrologerId: astrologer.value?.id ?? 'unknown'
+    if (_sessionId == null || astrologer.value == null) return;
+
+    final result = await _chatRepository.getGreeting(
+      _sessionId!,
+      astrologer.value!.id,
     );
-    
+
     result.fold(
-      onSuccess: (greeting) {
-        final greetingMessage = MessageModel(
+      onSuccess: (greetingResult) {
+        messages.add(greetingResult.greeting);
+      },
+      onFailure: (error) {
+        // Fallback greeting if API fails
+        messages.add(MessageModel(
           id: 'welcome',
           sessionId: _sessionId!,
           senderType: SenderType.astrologer,
-          content: greeting,
+          content: 'Namaste! How can I help you today?',
           createdAt: DateTime.now(),
-        );
-        messages.add(greetingMessage);
-        // Optimize: Save greeting to DB? Or just show it? 
-        // Typically greeting starts the session in DB.
-        _chatRepository.saveMessage(_sessionId!, greetingMessage);
-      },
-      onFailure: (error) {
-        // Fallback greeting if AI fails
-        messages.add(MessageModel(
-            id: 'welcome',
-            sessionId: _sessionId!,
-            senderType: SenderType.astrologer,
-            content: 'Namaste! How can I help you today?',
-            createdAt: DateTime.now(),
         ));
       },
     );
@@ -133,7 +116,7 @@ class ChatController extends GetxController {
 
     // Check Guest Limit
     if (!GuestService.to.canGuestChat()) {
-      GuestService.to.incrementGuestChat(); // Triggers prompt
+      GuestService.to.incrementGuestChat();
       return;
     }
 
@@ -143,31 +126,56 @@ class ChatController extends GetxController {
       _showAdModal();
       return;
     }
-    
+
     final text = messageInput.value.trim();
-    final message = MessageModel(
+
+    // Add optimistic user message
+    final optimisticMsg = MessageModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       sessionId: _sessionId!,
       senderType: SenderType.user,
       content: text,
       createdAt: DateTime.now(),
     );
+    messages.add(optimisticMsg);
 
-    messages.add(message);
-    _chatRepository.saveMessage(_sessionId!, message);
-    
-    // Decrement Count via Service
+    // Decrement credit
     _adService.decrementCredit();
-    
-    // Increment Guest Count
     GuestService.to.incrementGuestChat();
 
     messageInput.value = '';
     textController.clear();
     scrollToBottom();
 
-    // Simulate AI Response
-    _simulateAIResponse(text);
+    // Send to backend and get AI response
+    _sendAndReceive(text);
+  }
+
+  Future<void> _sendAndReceive(String userMessage) async {
+    isTyping.value = true;
+    scrollToBottom();
+
+    if (_sessionId == null) return;
+
+    final result = await _chatRepository.sendMessage(
+      _sessionId!,
+      astrologer.value!.id,
+      userMessage,
+    );
+
+    isTyping.value = false;
+
+    result.fold(
+      onSuccess: (sendResult) {
+        // Replace optimistic user message with server version
+        // and add AI response
+        messages.add(sendResult.aiResponse);
+        scrollToBottom();
+      },
+      onFailure: (error) {
+        Get.snackbar('Error', 'Failed to get response: ${error.message}');
+      },
+    );
   }
 
   void _showAdModal() {
@@ -202,57 +210,8 @@ class ChatController extends GetxController {
   }
 
   void _removeAds() {
-    Get.back(); // Close modal first if open
-    Get.toNamed('/settings/paywall'); // Use const from AppRoutes if imported, or raw string
-  }
-
-  void _simulateAIResponse(String userMessage) async {
-    isTyping.value = true;
-    scrollToBottom();
-    
-    // Get User ID (or null if guest/not logged in)
-    final userId = _authService.currentUserId;
-    
-    // If no user ID (e.g. guest), use a placeholder or handle gracefully
-    // Current AI function requires userId. 
-    // If guest, maybe we should skip saving "personalized" context but backend needs a userId.
-    final effectiveUserId = userId ?? 'guest';
-
-    if (_sessionId == null) return;
-
-    final result = await _aiService.generateResponse(
-      userId: effectiveUserId,
-      astrologerId: astrologer.value?.id ?? 'unknown',
-      message: userMessage,
-      sessionId: _sessionId!,
-    );
-    
-    isTyping.value = false;
-    
-    result.fold(
-      onSuccess: (responseText) {
-        final responseMessage = MessageModel(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          sessionId: _sessionId!,
-          senderType: SenderType.astrologer,
-          content: responseText,
-          createdAt: DateTime.now(),
-        );
-
-        messages.add(responseMessage);
-        _chatRepository.saveMessage(_sessionId!, responseMessage); // Already saved by backend function? 
-        // Note: The backend function usually saves the AI message. 
-        // If we save it again here, we might duplicate if we sync.
-        // But for local UI update we need it. 
-        // ChatRepository local save might be redundant if we refetch.
-        // For now, keeping it for consistency with optimistic UI.
-        
-        scrollToBottom();
-      },
-      onFailure: (error) {
-         Get.snackbar('Error', 'Failed to get response: ${error.message}');
-      },
-    );
+    Get.back();
+    Get.toNamed('/settings/paywall');
   }
 
   void scrollToBottom() {

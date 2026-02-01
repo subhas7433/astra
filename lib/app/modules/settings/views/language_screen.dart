@@ -21,8 +21,10 @@ class LanguageScreen extends GetView<LanguageController> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(AppDimensions.paddingMd),
+      body: SafeArea(
+        top: false,
+        child: ListView.separated(
+          padding: const EdgeInsets.all(AppDimensions.paddingMd),
         itemCount: controller.languages.length,
         separatorBuilder: (context, index) => const Divider(color: AppColors.surface),
         itemBuilder: (context, index) {
@@ -50,7 +52,8 @@ class LanguageScreen extends GetView<LanguageController> {
               tileColor: isSelected ? AppColors.primary.withValues(alpha: 0.1) : null,
             );
           });
-        },
+          },
+        ),
       ),
     );
   }

@@ -1,72 +1,76 @@
 import 'package:get/get.dart';
+
+import '../models/faq_model.dart';
 import '../../core/result/result.dart';
 import '../../core/result/app_error.dart';
-
-class FAQModel {
-  final String id;
-  final String questionHindi;
-  final String questionEnglish;
-  final String? category;
-  final String? astrologerId;
-  final int displayOrder;
-
-  FAQModel({
-    required this.id,
-    required this.questionHindi,
-    required this.questionEnglish,
-    this.category,
-    this.astrologerId,
-    this.displayOrder = 0,
-  });
-}
+import '../../core/services/api_client.dart';
 
 class FAQsRepository {
-  // final Databases _databases = Get.find<Databases>(); // Uncomment when Appwrite is fully set up
+  final ApiClient _api;
 
-  Future<Result<List<FAQModel>, AppError>> getFAQs({String? category}) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      return Result.success(_generateMockFAQs());
-    } catch (e) {
-      return Result.failure(UnknownError(message: e.toString()));
+  FAQsRepository() : _api = Get.find<ApiClient>();
+
+  Future<Result<List<FAQModel>, AppError>> getFAQs({
+    String? category,
+    String? astrologerId,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final params = <String, dynamic>{
+      'limit': limit,
+      'offset': offset,
+      'active_only': true,
+    };
+    if (category != null && category.isNotEmpty) {
+      params['category'] = category;
     }
+    if (astrologerId != null && astrologerId.isNotEmpty) {
+      params['astrologer_id'] = astrologerId;
+    }
+
+    final result = await _api.get('/api/v1/faqs', queryParameters: params);
+    return result.fold(
+      onSuccess: (body) {
+        final list = body['data'] as List<dynamic>? ?? [];
+        final faqs = list
+            .map((e) => FAQModel.fromApiJson(e as Map<String, dynamic>))
+            .toList();
+        return Result.success(faqs);
+      },
+      onFailure: (error) => Result.failure(error),
+    );
   }
 
-  Future<Result<List<FAQModel>, AppError>> getMostAskedQuestions({int limit = 10}) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      return Result.success(_generateMockFAQs().take(limit).toList());
-    } catch (e) {
-      return Result.failure(UnknownError(message: e.toString()));
-    }
+  Future<Result<List<FAQModel>, AppError>> getMostAskedQuestions({
+    int limit = 10,
+  }) async {
+    return getFAQs(limit: limit);
   }
 
-  List<FAQModel> _generateMockFAQs() {
-    return [
-      FAQModel(
-        id: 'faq_1',
-        questionEnglish: 'When will I get married?',
-        questionHindi: 'मेरी शादी कब होगी?',
-        category: 'Marriage',
-      ),
-      FAQModel(
-        id: 'faq_2',
-        questionEnglish: 'Will I get a government job?',
-        questionHindi: 'क्या मुझे सरकारी नौकरी मिलेगी?',
-        category: 'Career',
-      ),
-      FAQModel(
-        id: 'faq_3',
-        questionEnglish: 'Is my partner loyal?',
-        questionHindi: 'क्या मेरा साथी वफादार है?',
-        category: 'Love',
-      ),
-      FAQModel(
-        id: 'faq_4',
-        questionEnglish: 'When will I buy a house?',
-        questionHindi: 'मैं घर कब खरीदूंगा?',
-        category: 'Wealth',
-      ),
-    ];
+  Future<Result<List<FAQModel>, AppError>> getFAQsByCategory(
+    String category, {
+    int limit = 20,
+  }) async {
+    return getFAQs(category: category, limit: limit);
+  }
+
+  Future<Result<List<FAQModel>, AppError>> getFAQsByAstrologer(
+    String astrologerId, {
+    int limit = 20,
+  }) async {
+    final result = await _api.get(
+      '/api/v1/astrologers/$astrologerId/faqs',
+      queryParameters: {'limit': limit},
+    );
+    return result.fold(
+      onSuccess: (body) {
+        final list = body['data'] as List<dynamic>? ?? [];
+        final faqs = list
+            .map((e) => FAQModel.fromApiJson(e as Map<String, dynamic>))
+            .toList();
+        return Result.success(faqs);
+      },
+      onFailure: (error) => Result.failure(error),
+    );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/constants/zodiac_constants.dart';
@@ -17,9 +16,11 @@ class ZodiacPickerScreen extends GetView<ZodiacPickerController> {
         title: const Text('Horoscope'),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: AppDimensions.lg),
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            const SizedBox(height: AppDimensions.lg),
           Text(
             'Select Your Rashi',
             style: AppTypography.h2,
@@ -47,9 +48,10 @@ class ZodiacPickerScreen extends GetView<ZodiacPickerController> {
                   onTap: () => controller.selectSign(sign),
                 ));
               },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

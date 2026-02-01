@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'package:astra/app/modules/horoscope/widgets/zodiac_card.dart';
 import 'package:astra/app/modules/horoscope/widgets/category_card.dart';
 import 'package:astra/app/core/constants/zodiac_constants.dart';
-import 'package:astra/app/data/models/enums/zodiac_sign.dart';
 
 void main() {
   group('Horoscope Widgets Test', () {

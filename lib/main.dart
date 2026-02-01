@@ -9,7 +9,6 @@ import 'app/core/services/service_locator.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/core/utils/app_logger.dart';
 import 'app/routes/app_pages.dart';
-import 'app/core/services/impl/ad_service.dart';
 import 'app/data/services/storage_service.dart';
 import 'generated/app_localizations.dart';
 

@@ -15,8 +15,10 @@ class AstrologerListView extends GetView<AstrologerListController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
+          slivers: [
           // App Bar with Search
           SliverAppBar(
             floating: true,
@@ -92,7 +94,8 @@ class AstrologerListView extends GetView<AstrologerListController> {
               ),
             );
           }),
-        ],
+          ],
+        ),
       ),
     );
   }

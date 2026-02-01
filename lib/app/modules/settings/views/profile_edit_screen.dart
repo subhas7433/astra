@@ -36,9 +36,11 @@ class ProfileEditScreen extends GetView<ProfileEditController> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingMd),
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingMd),
+          child: Column(
           children: [
             // Avatar
             Center(
@@ -73,7 +75,8 @@ class ProfileEditScreen extends GetView<ProfileEditController> {
             _buildTextField('Email', controller.emailController, keyboardType: TextInputType.emailAddress),
             const SizedBox(height: AppDimensions.lg),
             _buildTextField('Phone', controller.phoneController, keyboardType: TextInputType.phone),
-          ],
+            ],
+          ),
         ),
       ),
     );

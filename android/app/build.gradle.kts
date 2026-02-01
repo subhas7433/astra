@@ -42,3 +42,25 @@ android {
 flutter {
     source = "../.."
 }
+
+// Workaround for Flutter CLI not finding APK with AGP 8.9.x
+// See: https://github.com/flutter/flutter/issues/174620
+val flutterOutDir = file("$buildDir/outputs/flutter-apk")
+val cliOutDir = file("${rootDir.parentFile}/build/app/outputs/flutter-apk")
+
+tasks.register<Copy>("syncFlutterApks") {
+    from(flutterOutDir)
+    into(cliOutDir)
+    doFirst {
+        cliOutDir.mkdirs()
+    }
+}
+
+android.applicationVariants.all {
+    val variantName = name.replaceFirstChar { it.uppercase() }
+    listOf("package$variantName", "assemble$variantName").forEach { taskName ->
+        tasks.matching { it.name == taskName }.configureEach {
+            finalizedBy(tasks.named("syncFlutterApks"))
+        }
+    }
+}

@@ -40,6 +40,25 @@ class ChatSessionModel extends Equatable {
     );
   }
 
+  /// Create ChatSessionModel from FastAPI REST response (snake_case).
+  factory ChatSessionModel.fromApiJson(Map<String, dynamic> json) {
+    return ChatSessionModel(
+      id: json['id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      astrologerId: json['astrologer_id']?.toString() ?? '',
+      lastMessageAt:
+          DateTime.tryParse(json['last_message_at']?.toString() ?? ''),
+      messageCount: (json['message_count'] as num?)?.toInt() ?? 0,
+      isActive: json['is_active'] as bool? ?? true,
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+              DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+              DateTime.now(),
+    );
+  }
+
   /// Convert to map for Appwrite storage.
   Map<String, dynamic> toMap() {
     return {

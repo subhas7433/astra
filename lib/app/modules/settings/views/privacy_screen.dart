@@ -20,9 +20,11 @@ class PrivacyScreen extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingLg),
-        child: Text(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          child: Text(
           '''
 1. Introduction
 Welcome to Astra. We respect your privacy and are committed to protecting your personal data.
@@ -39,7 +41,8 @@ We implement appropriate security measures to protect your personal data.
 5. Contact Us
 If you have any questions about this Privacy Policy, please contact us.
           ''',
-          style: AppTextStyles.bodyLarge,
+            style: AppTextStyles.bodyLarge,
+          ),
         ),
       ),
     );

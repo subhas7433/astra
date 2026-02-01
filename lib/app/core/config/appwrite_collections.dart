@@ -40,6 +40,9 @@ abstract class AppwriteCollections {
   /// Frequently asked questions collection
   static const String faqs = 'faqs';
 
+  /// Today's featured content (links to daily_content)
+  static const String todayContent = 'today_content';
+
   /// User subscriptions collection
   static const String subscriptions = 'subscriptions';
 }

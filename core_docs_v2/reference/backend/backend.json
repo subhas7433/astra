@@ -1,0 +1,4559 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Astro GPT API",
+    "description": "AI-powered astrology consultation API with personalized horoscopes and chat",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a new user",
+        "description": "Register a new user with auto-calculated zodiac sign from date of birth.",
+        "operationId": "create_user_api_v1_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_UserResponse_"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User with email or user_id already exists"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user by ID",
+        "description": "Retrieve user profile by external user ID (Firebase UID).",
+        "operationId": "get_user_api_v1_users__user_id__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_UserResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user profile",
+        "description": "Update user profile with partial data. Zodiac sign recalculated if date of birth changes.",
+        "operationId": "update_user_api_v1_users__user_id__put",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_UserResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Delete user account",
+        "description": "Delete user and all associated data (chat sessions, reviews, etc.).",
+        "operationId": "delete_user_api_v1_users__user_id__delete",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_dict_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/favorites": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user's favorite astrologers",
+        "description": "Get list of user's favorite astrologers with full astrologer details.",
+        "operationId": "get_user_favorites_api_v1_users__user_id__favorites_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Favorites retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_FavoriteWithAstrologer__"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/astrologers": {
+      "get": {
+        "tags": [
+          "Astrologers"
+        ],
+        "summary": "List astrologers with filters",
+        "description": "Get paginated list of astrologers with optional category and status filtering.",
+        "operationId": "list_astrologers_api_v1_astrologers_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AstrologerCategory"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category (life, love, career, health, all)",
+              "title": "Category"
+            },
+            "description": "Filter by category (life, love, career, health, all)"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Filter by active status (default: true)",
+              "default": true,
+              "title": "Is Active"
+            },
+            "description": "Filter by active status (default: true)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (1-100, default: 20)",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Items per page (1-100, default: 20)"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset (default: 0)",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset (default: 0)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Astrologers retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AstrologerListItem_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/astrologers/{astrologer_id}": {
+      "get": {
+        "tags": [
+          "Astrologers"
+        ],
+        "summary": "Get astrologer details",
+        "description": "Get full astrologer profile by ID. Excludes ai_persona_prompt.",
+        "operationId": "get_astrologer_api_v1_astrologers__astrologer_id__get",
+        "parameters": [
+          {
+            "name": "astrologer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Astrologer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Astrologer retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_AstrologerDetail_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Astrologer not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/astrologers/{astrologer_id}/reviews": {
+      "get": {
+        "tags": [
+          "Astrologers"
+        ],
+        "summary": "Get astrologer reviews",
+        "description": "Get paginated reviews for an astrologer, sorted by newest first.",
+        "operationId": "get_astrologer_reviews_api_v1_astrologers__astrologer_id__reviews_get",
+        "parameters": [
+          {
+            "name": "astrologer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Astrologer Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "description": "Items per page (1-50, default: 10)",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Items per page (1-50, default: 10)"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset (default: 0)",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset (default: 0)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reviews retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ReviewListItem_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Astrologer not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/astrologers/{astrologer_id}/faqs": {
+      "get": {
+        "tags": [
+          "Astrologers"
+        ],
+        "summary": "Get astrologer FAQs",
+        "description": "Get FAQs for an astrologer, sorted by display order.",
+        "operationId": "get_astrologer_faqs_api_v1_astrologers__astrologer_id__faqs_get",
+        "parameters": [
+          {
+            "name": "astrologer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Astrologer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "FAQs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_FAQListItem__"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Astrologer not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/sessions": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Create or get existing chat session",
+        "description": "Creates a new chat session or returns existing one for user+astrologer pair.",
+        "operationId": "create_or_get_session_api_v1_chat_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatSessionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Session created or retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_ChatSessionResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or astrologer not found"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/v1/chat/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Get chat session details",
+        "description": "Get full chat session with astrologer info and recent messages.",
+        "operationId": "get_session_api_v1_chat_sessions__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_ChatSessionDetail_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/users/{user_id}/sessions": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "List user's chat sessions",
+        "description": "Get paginated list of chat sessions for a user, sorted by last activity.",
+        "operationId": "list_user_sessions_api_v1_chat_users__user_id__sessions_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Filter by active sessions",
+              "default": true,
+              "title": "Is Active"
+            },
+            "description": "Filter by active sessions"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (1-100, default: 20)",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Items per page (1-100, default: 20)"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset (default: 0)",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset (default: 0)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sessions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ChatSessionWithAstrologer_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/sessions/{session_id}/messages": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Get message history for a session",
+        "description": "Get paginated list of messages, sorted chronologically.",
+        "operationId": "get_session_messages_api_v1_chat_sessions__session_id__messages_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (1-100, default: 20)",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Items per page (1-100, default: 20)"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset (default: 0)",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset (default: 0)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_MessageResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/messages/{message_id}/read": {
+      "put": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Mark message as read",
+        "description": "Mark a single message as read.",
+        "operationId": "mark_message_read_api_v1_chat_messages__message_id__read_put",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Message Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message marked as read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_MessageResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Message not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/sessions/{session_id}/read-all": {
+      "put": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Mark all messages as read",
+        "description": "Mark all unread messages in a session as read.",
+        "operationId": "mark_all_messages_read_api_v1_chat_sessions__session_id__read_all_put",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages marked as read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_dict_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat/message": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Send message and get AI response",
+        "description": "Send a user message and receive AI-generated astrologer response.",
+        "operationId": "send_message_api_v1_chat_message_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageWithSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent and AI response generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_SendMessageResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User, astrologer, or session not found"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/v1/chat/sessions/{session_id}/greeting": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Generate initial greeting",
+        "description": "Generate astrologer greeting for a new chat session.",
+        "operationId": "generate_greeting_api_v1_chat_sessions__session_id__greeting_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Greeting generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_GreetingResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "409": {
+            "description": "Greeting already exists"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/upload/profile-photo": {
+      "post": {
+        "tags": [
+          "File Upload"
+        ],
+        "summary": "Upload profile photo",
+        "description": "Upload a user profile photo. Accepts JPEG, PNG, or WebP images up to 5MB.",
+        "operationId": "upload_profile_photo_api_v1_upload_profile_photo_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_profile_photo_api_v1_upload_profile_photo_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Photo uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_dict_"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large (max 5MB)"
+          },
+          "415": {
+            "description": "Invalid file type (only JPEG, PNG, WebP allowed)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/upload/astrologer-image": {
+      "post": {
+        "tags": [
+          "File Upload"
+        ],
+        "summary": "Upload astrologer image",
+        "description": "Upload an astrologer image (avatar or hero banner). Accepts JPEG, PNG, or WebP images up to 5MB.",
+        "operationId": "upload_astrologer_image_api_v1_upload_astrologer_image_post",
+        "parameters": [
+          {
+            "name": "image_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "photo",
+                "hero"
+              ],
+              "type": "string",
+              "description": "Image type: 'photo' for avatar, 'hero' for banner",
+              "default": "photo",
+              "title": "Image Type"
+            },
+            "description": "Image type: 'photo' for avatar, 'hero' for banner"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_astrologer_image_api_v1_upload_astrologer_image_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_dict_"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large (max 5MB)"
+          },
+          "415": {
+            "description": "Invalid file type (only JPEG, PNG, WebP allowed)"
+          },
+          "422": {
+            "description": "Invalid image_type parameter"
+          }
+        }
+      }
+    },
+    "/api/v1/horoscopes": {
+      "get": {
+        "tags": [
+          "Horoscopes"
+        ],
+        "summary": "Get horoscopes with filters",
+        "description": "Get horoscopes filtered by zodiac sign, period type, date, and optional category.",
+        "operationId": "get_horoscopes_api_v1_horoscopes_get",
+        "parameters": [
+          {
+            "name": "zodiac_sign",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ZodiacSign"
+                }
+              ],
+              "description": "Zodiac sign (lowercase)",
+              "title": "Zodiac Sign"
+            },
+            "description": "Zodiac sign (lowercase)"
+          },
+          {
+            "name": "period_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/PeriodType"
+                }
+              ],
+              "description": "Period type",
+              "title": "Period Type"
+            },
+            "description": "Period type"
+          },
+          {
+            "name": "valid_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Date in YYYY-MM-DD format",
+              "title": "Valid Date"
+            },
+            "description": "Date in YYYY-MM-DD format"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/HoroscopeCategory"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional category filter (love, career, health)",
+              "title": "Category"
+            },
+            "description": "Optional category filter (love, career, health)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Horoscopes retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_HoroscopeResponse__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/horoscopes/today/{zodiac_sign}": {
+      "get": {
+        "tags": [
+          "Horoscopes"
+        ],
+        "summary": "Get today's horoscope for a sign",
+        "description": "Convenience endpoint to get today's daily horoscope.",
+        "operationId": "get_today_horoscope_api_v1_horoscopes_today__zodiac_sign__get",
+        "parameters": [
+          {
+            "name": "zodiac_sign",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ZodiacSign"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/HoroscopeCategory"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional category filter",
+              "title": "Category"
+            },
+            "description": "Optional category filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Today's horoscope retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_HoroscopeResponse__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/daily-content": {
+      "get": {
+        "tags": [
+          "Daily Content"
+        ],
+        "summary": "List daily content",
+        "description": "List daily content items with optional type filter and pagination.",
+        "operationId": "list_daily_content_api_v1_daily_content_get",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ContentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by content type (mantra, deity)",
+              "title": "Type"
+            },
+            "description": "Filter by content type (mantra, deity)"
+          },
+          {
+            "name": "valid_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by valid date",
+              "title": "Valid Date"
+            },
+            "description": "Filter by valid date"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Items per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of items to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of items to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Content retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_DailyContentResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/daily-content/today": {
+      "get": {
+        "tags": [
+          "Daily Content"
+        ],
+        "summary": "Get today's selected content",
+        "description": "Get today's selected content (mantra and/or deity).",
+        "operationId": "get_today_content_api_v1_daily_content_today_get",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ContentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by content type",
+              "title": "Type"
+            },
+            "description": "Filter by content type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Today's content retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/daily-content/{content_id}": {
+      "get": {
+        "tags": [
+          "Daily Content"
+        ],
+        "summary": "Get content by ID",
+        "description": "Get a specific daily content item by its UUID.",
+        "operationId": "get_content_by_id_api_v1_daily_content__content_id__get",
+        "parameters": [
+          {
+            "name": "content_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Content retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_DailyContentResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Content not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/faqs": {
+      "get": {
+        "tags": [
+          "FAQs"
+        ],
+        "summary": "List FAQs",
+        "description": "List FAQs with optional category and astrologer filters.",
+        "operationId": "list_faqs_api_v1_faqs_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category (general, astrology, subscription, etc.)",
+              "title": "Category"
+            },
+            "description": "Filter by category (general, astrology, subscription, etc.)"
+          },
+          {
+            "name": "astrologer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by astrologer ID (None for general FAQs)",
+              "title": "Astrologer Id"
+            },
+            "description": "Filter by astrologer ID (None for general FAQs)"
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Return only active FAQs",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Return only active FAQs"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Items per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of items to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of items to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "FAQs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_FAQResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reviews": {
+      "post": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Create review",
+        "description": "Create a review for an astrologer. One review per user per astrologer.",
+        "operationId": "create_review_api_v1_reviews_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User ID creating the review",
+              "title": "User Id"
+            },
+            "description": "User ID creating the review"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_ReviewResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or Astrologer not found"
+          },
+          "409": {
+            "description": "User has already reviewed this astrologer"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reviews/{review_id}": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Get review by ID",
+        "description": "Get a specific review by its UUID.",
+        "operationId": "get_review_api_v1_reviews__review_id__get",
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Review retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_ReviewResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Review not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Update review",
+        "description": "Update an existing review. Only the review owner can update.",
+        "operationId": "update_review_api_v1_reviews__review_id__put",
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User ID (must be review owner)",
+              "title": "User Id"
+            },
+            "description": "User ID (must be review owner)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_ReviewResponse_"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized to update this review"
+          },
+          "404": {
+            "description": "Review not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Delete review",
+        "description": "Delete a review. Only the review owner can delete.",
+        "operationId": "delete_review_api_v1_reviews__review_id__delete",
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User ID (must be review owner)",
+              "title": "User Id"
+            },
+            "description": "User ID (must be review owner)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Review deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_dict_"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized to delete this review"
+          },
+          "404": {
+            "description": "Review not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/favorites": {
+      "post": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Add favorite",
+        "description": "Add an astrologer to user's favorites. Idempotent - returns existing if already favorited.",
+        "operationId": "add_favorite_api_v1_favorites_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User ID adding the favorite",
+              "title": "User Id"
+            },
+            "description": "User ID adding the favorite"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Favorite added or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_FavoriteResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or Astrologer not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/favorites/{astrologer_id}": {
+      "delete": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Remove favorite",
+        "description": "Remove an astrologer from user's favorites. Idempotent - succeeds even if not favorited.",
+        "operationId": "remove_favorite_api_v1_favorites__astrologer_id__delete",
+        "parameters": [
+          {
+            "name": "astrologer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Astrologer Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User ID removing the favorite",
+              "title": "User Id"
+            },
+            "description": "User ID removing the favorite"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Favorite removed or did not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/favorites/check/{astrologer_id}": {
+      "get": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Check favorite status",
+        "description": "Check if a user has favorited a specific astrologer.",
+        "operationId": "check_favorite_api_v1_favorites_check__astrologer_id__get",
+        "parameters": [
+          {
+            "name": "astrologer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Astrologer Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User ID to check",
+              "title": "User Id"
+            },
+            "description": "User ID to check"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Favorite status returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_FavoriteCheck_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/{user_id}": {
+      "get": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "summary": "Get user subscription",
+        "description": "Get user's subscription. Auto-creates free tier if none exists.",
+        "operationId": "get_subscription_api_v1_subscriptions__user_id__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_SubscriptionResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions": {
+      "post": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "summary": "Create or update subscription",
+        "description": "Create or update a subscription after in-app purchase.",
+        "operationId": "create_or_update_subscription_api_v1_subscriptions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription created/updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_SubscriptionResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/{user_id}/deduct-credits": {
+      "post": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "summary": "Deduct chat credits",
+        "description": "Deduct credits after a chat message. For free/basic tiers only.",
+        "operationId": "deduct_credits_api_v1_subscriptions__user_id__deduct_credits_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditDeductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credits deducted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_SubscriptionResponse_"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Insufficient credits"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/{user_id}/add-credits": {
+      "post": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "summary": "Add chat credits",
+        "description": "Add credits to user's subscription (admin or purchase bonus).",
+        "operationId": "add_credits_api_v1_subscriptions__user_id__add_credits_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditAddRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credits added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_SubscriptionResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Health check endpoint.\n\nReturns the application status and basic configuration info.\nUsed by load balancers and monitoring systems.",
+        "operationId": "health_check_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Health Check Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Root"
+        ],
+        "summary": "Root",
+        "description": "Root endpoint.\n\nProvides basic API information and links to documentation.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AstrologerBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "photo_url": {
+            "type": "string",
+            "title": "Photo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "photo_url"
+        ],
+        "title": "AstrologerBrief",
+        "description": "Brief astrologer info for embedding in other responses."
+      },
+      "AstrologerCategory": {
+        "type": "string",
+        "enum": [
+          "life",
+          "love",
+          "career",
+          "health",
+          "all"
+        ],
+        "title": "AstrologerCategory",
+        "description": "Astrologer specialization categories."
+      },
+      "AstrologerDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "photo_url": {
+            "type": "string",
+            "title": "Photo Url"
+          },
+          "hero_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hero Image Url"
+          },
+          "bio": {
+            "type": "string",
+            "title": "Bio"
+          },
+          "specialization": {
+            "type": "string",
+            "title": "Specialization"
+          },
+          "expertise_tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Expertise Tags"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "rating": {
+            "type": "string",
+            "title": "Rating"
+          },
+          "review_count": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Review Count"
+          },
+          "chat_count": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Chat Count"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "display_order": {
+            "type": "integer",
+            "title": "Display Order"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "photo_url",
+          "bio",
+          "specialization",
+          "expertise_tags",
+          "languages",
+          "rating",
+          "review_count",
+          "chat_count",
+          "category",
+          "is_active",
+          "display_order",
+          "created_at"
+        ],
+        "title": "AstrologerDetail",
+        "description": "Public astrologer detail response (excludes ai_persona_prompt)."
+      },
+      "AstrologerListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "photo_url": {
+            "type": "string",
+            "title": "Photo Url"
+          },
+          "specialization": {
+            "type": "string",
+            "title": "Specialization"
+          },
+          "expertise_tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Expertise Tags"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "rating": {
+            "type": "string",
+            "title": "Rating"
+          },
+          "review_count": {
+            "type": "integer",
+            "title": "Review Count"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "photo_url",
+          "specialization",
+          "expertise_tags",
+          "languages",
+          "rating",
+          "review_count",
+          "category"
+        ],
+        "title": "AstrologerListItem",
+        "description": "Astrologer item for list views (lighter payload)."
+      },
+      "Body_upload_astrologer_image_api_v1_upload_astrologer_image_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Astrologer image (JPEG, PNG, or WebP, max 5MB)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_astrologer_image_api_v1_upload_astrologer_image_post"
+      },
+      "Body_upload_profile_photo_api_v1_upload_profile_photo_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Profile photo (JPEG, PNG, or WebP, max 5MB)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_profile_photo_api_v1_upload_profile_photo_post"
+      },
+      "ChatSessionCreateRequest": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "astrologer_id"
+        ],
+        "title": "ChatSessionCreateRequest",
+        "description": "Request to create/get a chat session (user_id temporary until auth)."
+      },
+      "ChatSessionDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          },
+          "astrologer": {
+            "$ref": "#/components/schemas/AstrologerBrief"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "message_count": {
+            "type": "integer",
+            "title": "Message Count"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageListItem"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "astrologer_id",
+          "astrologer",
+          "message_count",
+          "is_active",
+          "created_at"
+        ],
+        "title": "ChatSessionDetail",
+        "description": "Chat session with messages for detail view."
+      },
+      "ChatSessionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "message_count": {
+            "type": "integer",
+            "title": "Message Count"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "astrologer_id",
+          "message_count",
+          "is_active",
+          "created_at"
+        ],
+        "title": "ChatSessionResponse",
+        "description": "Full chat session response."
+      },
+      "ChatSessionWithAstrologer": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "astrologer": {
+            "$ref": "#/components/schemas/AstrologerBrief"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "message_count": {
+            "type": "integer",
+            "title": "Message Count"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "astrologer",
+          "message_count",
+          "is_active",
+          "created_at"
+        ],
+        "title": "ChatSessionWithAstrologer",
+        "description": "Chat session with embedded astrologer info for list views."
+      },
+      "ContentType": {
+        "type": "string",
+        "enum": [
+          "mantra",
+          "deity"
+        ],
+        "title": "ContentType",
+        "description": "Daily content types."
+      },
+      "CreditAddRequest": {
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "maximum": 1000,
+            "minimum": 1,
+            "title": "Amount"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "reason"
+        ],
+        "title": "CreditAddRequest",
+        "description": "Request to add chat credits (admin or purchase)."
+      },
+      "CreditDeductRequest": {
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "maximum": 10,
+            "minimum": 1,
+            "title": "Amount",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "title": "CreditDeductRequest",
+        "description": "Request to deduct chat credits."
+      },
+      "DailyContentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "title_hi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Hi"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "description_hi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description Hi"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "audio_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Url"
+          },
+          "valid_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid Date"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "title",
+          "description",
+          "valid_date",
+          "created_at"
+        ],
+        "title": "DailyContentResponse",
+        "description": "Full daily content response schema."
+      },
+      "FAQListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "question_en": {
+            "type": "string",
+            "title": "Question En"
+          },
+          "question_hi": {
+            "type": "string",
+            "title": "Question Hi"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "display_order": {
+            "type": "integer",
+            "title": "Display Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question_en",
+          "question_hi",
+          "display_order"
+        ],
+        "title": "FAQListItem",
+        "description": "FAQ item for list views."
+      },
+      "FAQResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "question_en": {
+            "type": "string",
+            "title": "Question En"
+          },
+          "question_hi": {
+            "type": "string",
+            "title": "Question Hi"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "astrologer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Astrologer Id"
+          },
+          "display_order": {
+            "type": "integer",
+            "title": "Display Order"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question_en",
+          "question_hi",
+          "display_order",
+          "is_active"
+        ],
+        "title": "FAQResponse",
+        "description": "Full FAQ response schema."
+      },
+      "FavoriteCheck": {
+        "properties": {
+          "is_favorite": {
+            "type": "boolean",
+            "title": "Is Favorite"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_favorite",
+          "astrologer_id"
+        ],
+        "title": "FavoriteCheck",
+        "description": "Response for checking if astrologer is favorited."
+      },
+      "FavoriteCreate": {
+        "properties": {
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "astrologer_id"
+        ],
+        "title": "FavoriteCreate",
+        "description": "Schema for adding a favorite."
+      },
+      "FavoriteResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "astrologer_id",
+          "created_at"
+        ],
+        "title": "FavoriteResponse",
+        "description": "Full favorite response with composite key."
+      },
+      "FavoriteWithAstrologer": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          },
+          "astrologer": {
+            "$ref": "#/components/schemas/AstrologerListItem"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "astrologer_id",
+          "astrologer",
+          "created_at"
+        ],
+        "title": "FavoriteWithAstrologer",
+        "description": "Favorite with embedded astrologer for list views."
+      },
+      "Gender": {
+        "type": "string",
+        "enum": [
+          "male",
+          "female",
+          "other"
+        ],
+        "title": "Gender",
+        "description": "User gender options."
+      },
+      "GreetingResponse": {
+        "properties": {
+          "greeting": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "session": {
+            "$ref": "#/components/schemas/ChatSessionResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "greeting",
+          "session"
+        ],
+        "title": "GreetingResponse",
+        "description": "Response for initial greeting generation."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HoroscopeCategory": {
+        "type": "string",
+        "enum": [
+          "love",
+          "career",
+          "health"
+        ],
+        "title": "HoroscopeCategory",
+        "description": "Horoscope prediction categories."
+      },
+      "HoroscopeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "zodiac_sign": {
+            "type": "string",
+            "title": "Zodiac Sign"
+          },
+          "period_type": {
+            "type": "string",
+            "title": "Period Type"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "prediction_text": {
+            "type": "string",
+            "title": "Prediction Text"
+          },
+          "prediction_text_hi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prediction Text Hi"
+          },
+          "tip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tip Text"
+          },
+          "tip_text_hi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tip Text Hi"
+          },
+          "energy_level": {
+            "type": "integer",
+            "title": "Energy Level"
+          },
+          "love_percentage": {
+            "type": "integer",
+            "title": "Love Percentage"
+          },
+          "love_prediction": {
+            "type": "string",
+            "title": "Love Prediction"
+          },
+          "career_percentage": {
+            "type": "integer",
+            "title": "Career Percentage"
+          },
+          "career_prediction": {
+            "type": "string",
+            "title": "Career Prediction"
+          },
+          "health_percentage": {
+            "type": "integer",
+            "title": "Health Percentage"
+          },
+          "health_prediction": {
+            "type": "string",
+            "title": "Health Prediction"
+          },
+          "lucky_numbers": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Lucky Numbers"
+          },
+          "lucky_color": {
+            "type": "string",
+            "title": "Lucky Color"
+          },
+          "lucky_time": {
+            "type": "string",
+            "title": "Lucky Time"
+          },
+          "valid_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid Date"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "zodiac_sign",
+          "period_type",
+          "category",
+          "prediction_text",
+          "energy_level",
+          "love_percentage",
+          "love_prediction",
+          "career_percentage",
+          "career_prediction",
+          "health_percentage",
+          "health_prediction",
+          "lucky_numbers",
+          "lucky_color",
+          "lucky_time",
+          "valid_date",
+          "created_at"
+        ],
+        "title": "HoroscopeResponse",
+        "description": "Full horoscope response schema."
+      },
+      "Language": {
+        "type": "string",
+        "enum": [
+          "en",
+          "hi"
+        ],
+        "title": "Language",
+        "description": "Supported languages for content."
+      },
+      "MessageListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "sender_type": {
+            "type": "string",
+            "title": "Sender Type"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "is_read": {
+            "type": "boolean",
+            "title": "Is Read"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sender_type",
+          "content",
+          "is_read",
+          "created_at"
+        ],
+        "title": "MessageListItem",
+        "description": "Message item for list views."
+      },
+      "MessageResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          },
+          "sender_type": {
+            "type": "string",
+            "title": "Sender Type"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "is_read": {
+            "type": "boolean",
+            "title": "Is Read"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "sender_type",
+          "content",
+          "is_read",
+          "created_at"
+        ],
+        "title": "MessageResponse",
+        "description": "Schema for message in response."
+      },
+      "PaginatedResponse_AstrologerListItem_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AstrologerListItem"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[AstrologerListItem]"
+      },
+      "PaginatedResponse_ChatSessionWithAstrologer_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ChatSessionWithAstrologer"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[ChatSessionWithAstrologer]"
+      },
+      "PaginatedResponse_DailyContentResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DailyContentResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[DailyContentResponse]"
+      },
+      "PaginatedResponse_FAQResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FAQResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[FAQResponse]"
+      },
+      "PaginatedResponse_MessageResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/MessageResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[MessageResponse]"
+      },
+      "PaginatedResponse_ReviewListItem_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewListItem"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[ReviewListItem]"
+      },
+      "Pagination": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "description": "Items per page"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Offset",
+            "description": "Number of items skipped"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "description": "Whether more items exist"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "limit",
+          "offset",
+          "has_more"
+        ],
+        "title": "Pagination",
+        "description": "Pagination metadata."
+      },
+      "PeriodType": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "weekly",
+          "monthly",
+          "yearly"
+        ],
+        "title": "PeriodType",
+        "description": "Horoscope period types."
+      },
+      "Platform": {
+        "type": "string",
+        "enum": [
+          "ios",
+          "android"
+        ],
+        "title": "Platform",
+        "description": "Mobile platform types."
+      },
+      "ReviewCreate": {
+        "properties": {
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          },
+          "rating": {
+            "type": "integer",
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Rating",
+            "description": "Rating from 1 to 5 stars"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "astrologer_id",
+          "rating"
+        ],
+        "title": "ReviewCreate",
+        "description": "Schema for creating a review."
+      },
+      "ReviewListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_name",
+          "rating",
+          "created_at"
+        ],
+        "title": "ReviewListItem",
+        "description": "Review item for list views."
+      },
+      "ReviewResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "astrologer_id",
+          "user_id",
+          "user_name",
+          "rating",
+          "created_at"
+        ],
+        "title": "ReviewResponse",
+        "description": "Full review response schema."
+      },
+      "ReviewUpdate": {
+        "properties": {
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5,
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "title": "ReviewUpdate",
+        "description": "Schema for updating a review."
+      },
+      "SendMessageResponse": {
+        "properties": {
+          "user_message": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "ai_response": {
+            "$ref": "#/components/schemas/MessageResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_message",
+          "ai_response"
+        ],
+        "title": "SendMessageResponse",
+        "description": "Response schema after sending a message."
+      },
+      "SendMessageWithSessionRequest": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "astrologer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Astrologer Id"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Content",
+            "description": "Message content"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "Existing session ID (creates new if not provided)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "astrologer_id",
+          "content"
+        ],
+        "title": "SendMessageWithSessionRequest",
+        "description": "Request to send a message with session creation support."
+      },
+      "SubscriptionCreate": {
+        "properties": {
+          "tier": {
+            "$ref": "#/components/schemas/SubscriptionTier"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SubscriptionStatus"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/Platform"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "transaction_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Id"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "chat_credits": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Chat Credits",
+            "default": 5
+          },
+          "ads_removed": {
+            "type": "boolean",
+            "title": "Ads Removed",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "tier",
+          "status",
+          "platform",
+          "user_id",
+          "start_date"
+        ],
+        "title": "SubscriptionCreate",
+        "description": "Schema for creating a subscription."
+      },
+      "SubscriptionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "transaction_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Id"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "chat_credits": {
+            "type": "integer",
+            "title": "Chat Credits"
+          },
+          "ads_removed": {
+            "type": "boolean",
+            "title": "Ads Removed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "tier",
+          "status",
+          "platform",
+          "start_date",
+          "chat_credits",
+          "ads_removed",
+          "created_at"
+        ],
+        "title": "SubscriptionResponse",
+        "description": "Full subscription response schema."
+      },
+      "SubscriptionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "cancelled",
+          "expired"
+        ],
+        "title": "SubscriptionStatus",
+        "description": "Subscription status values."
+      },
+      "SubscriptionTier": {
+        "type": "string",
+        "enum": [
+          "free",
+          "basic",
+          "premium"
+        ],
+        "title": "SubscriptionTier",
+        "description": "Subscription tier levels."
+      },
+      "SuccessResponse_AstrologerDetail_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AstrologerDetail"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[AstrologerDetail]"
+      },
+      "SuccessResponse_ChatSessionDetail_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ChatSessionDetail"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[ChatSessionDetail]"
+      },
+      "SuccessResponse_ChatSessionResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ChatSessionResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[ChatSessionResponse]"
+      },
+      "SuccessResponse_DailyContentResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/DailyContentResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[DailyContentResponse]"
+      },
+      "SuccessResponse_FavoriteCheck_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/FavoriteCheck"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[FavoriteCheck]"
+      },
+      "SuccessResponse_FavoriteResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/FavoriteResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[FavoriteResponse]"
+      },
+      "SuccessResponse_GreetingResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/GreetingResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[GreetingResponse]"
+      },
+      "SuccessResponse_MessageResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[MessageResponse]"
+      },
+      "SuccessResponse_ReviewResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReviewResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[ReviewResponse]"
+      },
+      "SuccessResponse_SendMessageResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/SendMessageResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[SendMessageResponse]"
+      },
+      "SuccessResponse_SubscriptionResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/SubscriptionResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[SubscriptionResponse]"
+      },
+      "SuccessResponse_UserResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserResponse"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[UserResponse]"
+      },
+      "SuccessResponse_dict_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "type": "object",
+            "title": "Data"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[dict]"
+      },
+      "SuccessResponse_list_FAQListItem__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FAQListItem"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[list[FAQListItem]]"
+      },
+      "SuccessResponse_list_FavoriteWithAstrologer__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FavoriteWithAstrologer"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[list[FavoriteWithAstrologer]]"
+      },
+      "SuccessResponse_list_HoroscopeResponse__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/HoroscopeResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[list[HoroscopeResponse]]"
+      },
+      "UserCreate": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Full Name"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Of Birth"
+          },
+          "preferred_language": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Language"
+              }
+            ],
+            "default": "en"
+          },
+          "user_id": {
+            "type": "string",
+            "maxLength": 36,
+            "minLength": 1,
+            "title": "User Id",
+            "description": "External user ID from auth provider (Firebase UID)"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "profile_photo_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Photo Url",
+            "description": "URL to user's profile photo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "gender",
+          "date_of_birth",
+          "user_id",
+          "email"
+        ],
+        "title": "UserCreate",
+        "description": "Schema for creating a new user."
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "gender": {
+            "type": "string",
+            "title": "Gender"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Of Birth"
+          },
+          "zodiac_sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zodiac Sign"
+          },
+          "preferred_language": {
+            "type": "string",
+            "title": "Preferred Language"
+          },
+          "profile_photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Photo Url"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "email",
+          "full_name",
+          "gender",
+          "date_of_birth",
+          "preferred_language",
+          "created_at"
+        ],
+        "title": "UserResponse",
+        "description": "Schema for user response (full user data)."
+      },
+      "UserUpdate": {
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Gender"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date_of_birth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Of Birth"
+          },
+          "preferred_language": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Language"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "profile_photo_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Photo Url"
+          },
+          "fcm_token": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcm Token",
+            "description": "Firebase Cloud Messaging token"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate",
+        "description": "Schema for updating user fields (all optional)."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ZodiacSign": {
+        "type": "string",
+        "enum": [
+          "aries",
+          "taurus",
+          "gemini",
+          "cancer",
+          "leo",
+          "virgo",
+          "libra",
+          "scorpio",
+          "sagittarius",
+          "capricorn",
+          "aquarius",
+          "pisces"
+        ],
+        "title": "ZodiacSign",
+        "description": "12 zodiac signs for astrological calculations."
+      }
+    }
+  }
+}

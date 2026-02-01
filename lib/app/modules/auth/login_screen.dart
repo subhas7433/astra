@@ -54,15 +54,6 @@ class LoginScreen extends GetView<AuthController> {
                   )),
               const SizedBox(height: AppDimensions.md),
 
-              // Google Sign-In Button
-              Obx(() => AppButton.secondary(
-                    label: 'Sign in with Google',
-                    onPressed: controller.signInWithGoogle,
-                    isLoading: controller.isLoading,
-                    leadingIcon: Icons.g_mobiledata, // Or use a custom SVG icon
-                  )),
-              const SizedBox(height: AppDimensions.lg),
-
               // Guest Mode
               Center(
                 child: TextButton(
