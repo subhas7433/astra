@@ -29,6 +29,7 @@ import '../modules/daily_content/bindings/numerology_binding.dart';
 import '../modules/daily_content/views/numerology_screen.dart';
 import '../modules/settings/bindings/settings_binding.dart';
 import '../modules/settings/controllers/language_controller.dart';
+import '../modules/settings/controllers/favorites_controller.dart';
 import '../modules/settings/views/favorites_screen.dart';
 import '../modules/settings/views/language_screen.dart';
 import '../modules/settings/views/profile_edit_screen.dart';
@@ -38,6 +39,8 @@ import '../modules/settings/views/feedback_screen.dart';
 import '../modules/settings/views/privacy_screen.dart';
 import '../modules/settings/views/terms_screen.dart';
 import '../modules/settings/views/paywall_screen.dart';
+import '../modules/navigation/bindings/navigation_binding.dart';
+import '../modules/navigation/views/main_shell.dart';
 import 'app_routes.dart';
 
 /// GetX page definitions for app navigation.
@@ -105,6 +108,15 @@ class AppPages {
     ),
 
     // ============ Main App ============
+
+    /// Main shell with bottom navigation
+    GetPage(
+      name: AppRoutes.mainShell,
+      page: () => const MainShell(),
+      binding: NavigationBinding(),
+      transition: Transition.fadeIn,
+      transitionDuration: transitionDuration,
+    ),
 
     /// Home dashboard
     GetPage(
@@ -218,6 +230,9 @@ class AppPages {
     GetPage(
       name: AppRoutes.favorites,
       page: () => const FavoritesScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(FavoritesController());
+      }),
       transition: Transition.rightToLeft,
       transitionDuration: transitionDuration,
     ),

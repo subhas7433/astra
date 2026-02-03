@@ -48,7 +48,7 @@ class AstroGptApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Astro GPT',
+      title: 'Astra AI',
       debugShowCheckedModeBanner: false,
       // Initial binding for app-wide controllers
       initialBinding: InitialBinding(),

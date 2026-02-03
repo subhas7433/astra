@@ -23,6 +23,9 @@ abstract class AppRoutes {
   static const String onboarding = '/onboarding';
 
   // ============ Main App ============
+  /// Main shell with bottom navigation
+  static const String mainShell = '/main';
+
   /// Home dashboard
   static const String home = '/home';
 
