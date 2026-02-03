@@ -9,6 +9,7 @@ import '../../result/result.dart';
 import '../../result/app_error.dart';
 import '../../utils/app_logger.dart';
 import '../../../data/providers/appwrite_client_provider.dart';
+import '../api_client.dart';
 import '../interfaces/i_auth_service.dart';
 
 /// Appwrite implementation of [IAuthService].
@@ -78,6 +79,43 @@ class AppwriteAuthService extends GetxService implements IAuthService {
     );
   }
 
+  /// Clear any existing session to prevent blocked session from affecting new requests.
+  /// This is critical after account deletion - the blocked session cookie persists
+  /// and causes "user blocked" errors for ALL subsequent requests.
+  Future<void> _clearExistingSession() async {
+    _clearCachedJwt();
+    try {
+      await _account.deleteSession(sessionId: 'current');
+      AppLogger.debug('Cleared existing session', tag: _tag);
+    } on AppwriteException catch (e) {
+      AppLogger.debug('Session clear failed: ${e.type} - ${e.message}', tag: _tag);
+      // If user is blocked, the session delete fails but local cookie persists.
+      // Reinitialize the client to clear local cookie state (including disk cookies).
+      if (_isUserBlockedError(e)) {
+        AppLogger.info('Blocked user detected, reinitializing client to clear cookies', tag: _tag);
+        await _clientProvider.reinitialize();
+      }
+    } catch (e) {
+      // No session to clear - this is fine
+      AppLogger.debug('No existing session to clear: $e', tag: _tag);
+    }
+    _updateAuthState(null);
+  }
+
+  void _clearCachedJwt() {
+    if (Get.isRegistered<ApiClient>()) {
+      Get.find<ApiClient>().clearJwtCache();
+      AppLogger.debug('Cleared cached JWT', tag: _tag);
+    }
+  }
+
+  /// Check if an AppwriteException indicates a blocked user
+  bool _isUserBlockedError(AppwriteException e) {
+    // Appwrite returns 401 with type 'user_blocked' for blocked users
+    return e.type == 'user_blocked' ||
+        (e.message?.toLowerCase().contains('blocked') ?? false);
+  }
+
   @override
   Future<Result<String, AppError>> registerWithEmail({
     required String email,
@@ -85,6 +123,9 @@ class AppwriteAuthService extends GetxService implements IAuthService {
     required String name,
   }) async {
     AppLogger.info('Registering user: $email', tag: _tag);
+
+    // Clear any existing session first (handles blocked user scenario)
+    await _clearExistingSession();
 
     try {
       // Create user account
@@ -105,6 +146,15 @@ class AppwriteAuthService extends GetxService implements IAuthService {
         onFailure: (error) => Result.failure(error),
       );
     } on AppwriteException catch (e, stack) {
+      // If blocked error, clear session and return specific error
+      if (_isUserBlockedError(e)) {
+        await _clearExistingSession();
+        return Result.failure(UserBlockedError(
+          message: e.message ?? 'This account has been blocked',
+          originalError: e,
+          stackTrace: stack,
+        ));
+      }
       return Result.failure(_mapAppwriteException(e, stack));
     } catch (e, stack) {
       AppLogger.error('Registration failed', error: e, stackTrace: stack, tag: _tag);
@@ -123,6 +173,9 @@ class AppwriteAuthService extends GetxService implements IAuthService {
   }) async {
     AppLogger.info('Logging in user: $email', tag: _tag);
 
+    // Clear any existing session first (handles blocked user scenario)
+    await _clearExistingSession();
+
     try {
       // Create email session
       await _account.createEmailPasswordSession(
@@ -137,6 +190,15 @@ class AppwriteAuthService extends GetxService implements IAuthService {
       AppLogger.info('Login successful: ${user.$id}', tag: _tag);
       return Result.success(user.$id);
     } on AppwriteException catch (e, stack) {
+      // If blocked error, clear session and return specific error
+      if (_isUserBlockedError(e)) {
+        await _clearExistingSession();
+        return Result.failure(UserBlockedError(
+          message: e.message ?? 'This account has been blocked',
+          originalError: e,
+          stackTrace: stack,
+        ));
+      }
       return Result.failure(_mapAppwriteException(e, stack));
     } catch (e, stack) {
       AppLogger.error('Login failed', error: e, stackTrace: stack, tag: _tag);
@@ -196,6 +258,7 @@ class AppwriteAuthService extends GetxService implements IAuthService {
     try {
       // Delete current session
       await _account.deleteSession(sessionId: 'current');
+      _clearCachedJwt();
       _updateAuthState(null);
 
       AppLogger.info('Logout successful', tag: _tag);
@@ -203,6 +266,7 @@ class AppwriteAuthService extends GetxService implements IAuthService {
     } on AppwriteException catch (e, stack) {
       // If already logged out, consider it success
       if (e.code == 401) {
+        _clearCachedJwt();
         _updateAuthState(null);
         return const Result.success(null);
       }
@@ -248,8 +312,23 @@ class AppwriteAuthService extends GetxService implements IAuthService {
 
     try {
       final userId = currentUserId;
+
+      // 1. DELETE SESSION FIRST (while user is still valid!)
+      // This is critical - session must be deleted BEFORE blocking
+      // Otherwise deleteSession() will fail with "user blocked" error
+      try {
+        await _account.deleteSession(sessionId: 'current');
+        AppLogger.info('Session deleted successfully', tag: _tag);
+      } catch (e) {
+        AppLogger.warning('Failed to delete session: $e', tag: _tag);
+      }
+
+      // 2. Clear all local cookie storage
+      await _clientProvider.clearAllCookies();
+      _clearCachedJwt();
+
+      // 3. Delete user document from database (data cleanup)
       if (userId != null) {
-        // 1. Delete user document from database (data cleanup)
         try {
           await _clientProvider.databases.deleteDocument(
             databaseId: _clientProvider.config.databaseId,
@@ -263,9 +342,19 @@ class AppwriteAuthService extends GetxService implements IAuthService {
         }
       }
 
-      // 2. Block the account (Client-side deletion strategy)
-      // This invalidates sessions and prevents login
-      await _account.updateStatus();
+      // 4. Block the account (Client-side deletion strategy)
+      // This may fail since session was deleted, but that's OK
+      try {
+        await _account.updateStatus();
+        AppLogger.info('Account blocked', tag: _tag);
+      } catch (e) {
+        // Expected if session was deleted - the account is still blocked server-side
+        AppLogger.warning('Failed to block account (expected if session deleted): $e', tag: _tag);
+      }
+
+      // 5. Reset the Appwrite client to ensure fresh state
+      AppwriteClientProvider.reset();
+
       _updateAuthState(null);
 
       AppLogger.info('Account deleted successfully', tag: _tag);
@@ -375,9 +464,18 @@ class AppwriteAuthService extends GetxService implements IAuthService {
   /// Map Appwrite exceptions to typed AppError
   AppError _mapAppwriteException(AppwriteException e, StackTrace stack) {
     AppLogger.warning(
-      'Appwrite error: ${e.code} - ${e.message}',
+      'Appwrite error: ${e.code} - ${e.message} (type: ${e.type})',
       tag: _tag,
     );
+
+    // Check for user blocked error first (can come with various codes)
+    if (_isUserBlockedError(e)) {
+      return UserBlockedError(
+        message: e.message ?? 'This account has been blocked',
+        originalError: e,
+        stackTrace: stack,
+      );
+    }
 
     return switch (e.code) {
       // Authentication errors

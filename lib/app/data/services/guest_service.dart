@@ -12,8 +12,8 @@ class GuestService extends GetxService {
   void enterGuestMode() {
     isGuest.value = true;
     guestChatCount.value = 0;
-    // Navigate to home with limited access
-    Get.offAllNamed(AppRoutes.home);
+    // Navigate to main shell with limited access
+    Get.offAllNamed(AppRoutes.mainShell);
   }
 
   bool canGuestChat() {

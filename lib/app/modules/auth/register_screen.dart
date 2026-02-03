@@ -1,14 +1,16 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_typography.dart';
 import '../../widgets/buttons/app_button.dart';
 import '../../widgets/feedback/error_box.dart';
 import '../../widgets/inputs/app_text_field.dart';
 import '../../widgets/inputs/password_field.dart';
-import '../../data/services/guest_service.dart';
 import 'auth_controller.dart';
 
 /// Registration screen for new users.
@@ -34,33 +36,31 @@ class RegisterScreen extends GetView<AuthController> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: controller.goToLogin,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => GuestService.to.enterGuestMode(),
-            child: Text(
-              'Maybe Later',
-              style: AppTypography.body2.copyWith(color: AppColors.primary),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppDimensions.lg),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.lg,
+            vertical: AppDimensions.md,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header
               _buildHeader(context),
-              const SizedBox(height: AppDimensions.xl),
+              const SizedBox(height: AppDimensions.md),
 
               // Register Form
               _buildRegisterForm(),
-              const SizedBox(height: AppDimensions.lg),
+              const SizedBox(height: AppDimensions.md),
+
+              // Terms & Privacy Checkbox
+              _buildTermsCheckbox(),
+              const SizedBox(height: AppDimensions.sm),
 
               // Error Message
               ErrorBox.reactive(rxMessage: controller.errorMessage),
-              const SizedBox(height: AppDimensions.lg),
+              const SizedBox(height: AppDimensions.md),
 
               // Register Button
               Obx(() => AppButton.primary(
@@ -68,10 +68,11 @@ class RegisterScreen extends GetView<AuthController> {
                     onPressed: controller.register,
                     isLoading: controller.isLoading,
                   )),
-              const SizedBox(height: AppDimensions.lg),
+              const SizedBox(height: AppDimensions.md),
 
               // Login Link
               _buildLoginLink(context),
+              const SizedBox(height: AppDimensions.md),
             ],
           ),
         ),
@@ -85,12 +86,12 @@ class RegisterScreen extends GetView<AuthController> {
       children: [
         Text(
           'Create Account',
-          style: AppTypography.h1,
+          style: AppTypography.h2,
         ),
-        const SizedBox(height: AppDimensions.xs),
+        const SizedBox(height: 4),
         Text(
-          'Start your astrological journey today',
-          style: AppTypography.body1.copyWith(color: AppColors.textSecondary),
+          'Start your astrological journey',
+          style: AppTypography.body2.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -108,7 +109,7 @@ class RegisterScreen extends GetView<AuthController> {
           textInputAction: TextInputAction.next,
           prefixIcon: Icons.person_outline,
         ),
-        const SizedBox(height: AppDimensions.md),
+        const SizedBox(height: AppDimensions.sm),
 
         // Email Field
         AppTextField(
@@ -119,7 +120,7 @@ class RegisterScreen extends GetView<AuthController> {
           textInputAction: TextInputAction.next,
           prefixIcon: Icons.email_outlined,
         ),
-        const SizedBox(height: AppDimensions.md),
+        const SizedBox(height: AppDimensions.sm),
 
         // Date of Birth Field
         Obx(() {
@@ -140,7 +141,7 @@ class RegisterScreen extends GetView<AuthController> {
             ),
           );
         }),
-        const SizedBox(height: AppDimensions.md),
+        const SizedBox(height: AppDimensions.sm),
 
         // Password Field
         PasswordField(
@@ -151,7 +152,7 @@ class RegisterScreen extends GetView<AuthController> {
           onToggleVisibility: controller.togglePasswordVisibility,
           textInputAction: TextInputAction.next,
         ),
-        const SizedBox(height: AppDimensions.md),
+        const SizedBox(height: AppDimensions.sm),
 
         // Confirm Password Field
         PasswordField(
@@ -164,6 +165,67 @@ class RegisterScreen extends GetView<AuthController> {
         ),
       ],
     );
+  }
+
+  Widget _buildTermsCheckbox() {
+    return Obx(() => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 24,
+              width: 24,
+              child: Checkbox(
+                value: controller.termsAccepted.value,
+                onChanged: (_) => controller.toggleTermsAcceptance(),
+                activeColor: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: AppDimensions.paddingSm),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  style: AppTypography.body2.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  children: [
+                    const TextSpan(text: 'I agree to the '),
+                    TextSpan(
+                      text: 'Terms of Service',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          final uri = Uri.parse(AppConstants.termsOfServiceUrl);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                    ),
+                    const TextSpan(text: ' and '),
+                    TextSpan(
+                      text: 'Privacy Policy',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          final uri = Uri.parse(AppConstants.privacyPolicyUrl);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ));
   }
 
   Widget _buildLoginLink(BuildContext context) {

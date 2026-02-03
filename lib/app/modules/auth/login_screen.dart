@@ -8,7 +8,6 @@ import '../../widgets/buttons/app_button.dart';
 import '../../widgets/feedback/error_box.dart';
 import '../../widgets/inputs/app_text_field.dart';
 import '../../widgets/inputs/password_field.dart';
-import '../../data/services/guest_service.dart';
 import 'auth_controller.dart';
 
 /// Login screen for user authentication.
@@ -52,21 +51,6 @@ class LoginScreen extends GetView<AuthController> {
                     onPressed: controller.login,
                     isLoading: controller.isLoading,
                   )),
-              const SizedBox(height: AppDimensions.md),
-
-              // Guest Mode
-              Center(
-                child: TextButton(
-                  onPressed: () => GuestService.to.enterGuestMode(),
-                  child: Text(
-                    'Continue as Guest',
-                    style: AppTypography.body2.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: AppDimensions.lg),
 
               // Register Link

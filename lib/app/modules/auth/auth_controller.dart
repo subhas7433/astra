@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../controllers/base_controller.dart';
+import '../../controllers/user_controller.dart';
 import '../../core/services/interfaces/i_auth_service.dart';
 import '../../core/utils/app_logger.dart';
 import '../../data/services/guest_service.dart';
@@ -57,6 +58,9 @@ class AuthController extends BaseController {
   /// Confirm password visibility toggle
   final RxBool isConfirmPasswordVisible = false.obs;
 
+  /// Terms and privacy policy acceptance
+  final RxBool termsAccepted = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -80,7 +84,7 @@ class AuthController extends BaseController {
         AppLogger.info('Login successful: $userId', tag: _tag);
         GuestService.to.exitGuestMode();
         _clearForms();
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.mainShell);
       },
       onError: (error) {
         AppLogger.warning('Login failed: ${error.message}', tag: _tag);
@@ -125,7 +129,7 @@ class AuthController extends BaseController {
       onSuccess: (userId) {
         AppLogger.info('Google Sign-In successful: $userId', tag: _tag);
         _clearForms();
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.mainShell);
       },
       onError: (error) {
         AppLogger.warning('Google Sign-In failed: ${error.message}', tag: _tag);
@@ -165,12 +169,17 @@ class AuthController extends BaseController {
             updatedAt: now,
           );
           await userRepo.createUser(user);
+
+          // Reload user profile in UserController
+          // This is needed because authStateChanges fired BEFORE the document was created
+          final userController = Get.find<UserController>();
+          await userController.loadProfile(userId);
         } catch (e) {
           AppLogger.warning('Failed to create backend user profile: $e', tag: _tag);
         }
 
         _clearForms();
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.mainShell);
       },
       onError: (error) {
         AppLogger.warning('Registration failed: ${error.message}', tag: _tag);
@@ -225,6 +234,11 @@ class AuthController extends BaseController {
       return false;
     }
 
+    if (!termsAccepted.value) {
+      setError('Please accept the Terms of Service and Privacy Policy');
+      return false;
+    }
+
     return true;
   }
 
@@ -271,6 +285,11 @@ class AuthController extends BaseController {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
   }
 
+  /// Toggle terms acceptance.
+  void toggleTermsAcceptance() {
+    termsAccepted.value = !termsAccepted.value;
+  }
+
   /// Clear all form fields.
   void _clearForms() {
     emailController.clear();
@@ -280,6 +299,7 @@ class AuthController extends BaseController {
     isPasswordVisible.value = false;
     isConfirmPasswordVisible.value = false;
     dateOfBirth.value = null;
+    termsAccepted.value = false;
   }
 
   @override
