@@ -29,3 +29,20 @@ Run on real device - /Users/subhas/Work/flutter/bin/flutter run -d adb-7abcedd6-
   App open - ca-app-pub-2063094445044192/3844172313
   Reward - ca-app-pub-2063094445044192/6676373300
   Banner - ca-app-pub-2063094445044192/6470335653
+
+  App Id - ca-app-pub-2063094445044192~9985062924
+
+
+
+  keystore pass - 4qj2RQV&5n[$
+  Key alias - release
+  Key password - 4qj2RQV&5n[$
+
+  Validity period - 10000 days
+
+  CN -  Astraai
+  OU - Development
+  O - Technoava Technologies
+  L - Budge Budge
+  ST - West Bengal
+  C - IN
