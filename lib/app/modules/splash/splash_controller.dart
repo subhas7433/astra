@@ -48,8 +48,8 @@ class SplashController extends BaseController {
     result.fold(
       onSuccess: (isAuthenticated) {
         if (isAuthenticated) {
-          AppLogger.info('User authenticated, navigating to home', tag: _tag);
-          Get.offAllNamed(AppRoutes.home);
+          AppLogger.info('User authenticated, navigating to main', tag: _tag);
+          Get.offAllNamed(AppRoutes.mainShell);
         } else {
           AppLogger.info('User not authenticated, navigating to login', tag: _tag);
           Get.offAllNamed(AppRoutes.login);

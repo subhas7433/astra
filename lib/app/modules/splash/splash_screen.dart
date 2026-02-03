@@ -20,25 +20,20 @@ class SplashScreen extends GetView<SplashController> {
           child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // App Logo/Icon placeholder
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-              ),
-              child: const Icon(
-                Icons.auto_awesome,
-                size: 60,
-                color: Colors.white,
+            // App Logo
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                width: 120,
+                height: 120,
               ),
             ),
             SizedBox(height: AppDimensions.xl),
 
             // App Name
             Text(
-              'Astro GPT',
+              'Astra AI',
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
