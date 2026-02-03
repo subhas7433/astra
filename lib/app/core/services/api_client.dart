@@ -1,10 +1,12 @@
 import 'package:appwrite/appwrite.dart' hide Response;
 import 'package:dio/dio.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../config/appwrite_config.dart';
 import '../result/app_error.dart';
 import '../result/result.dart';
 import '../utils/app_logger.dart';
+import '../../global/widgets/upgrade_dialog.dart';
 import '../../data/providers/appwrite_client_provider.dart';
 
 class ApiClient {
@@ -15,6 +17,7 @@ class ApiClient {
 
   String? _cachedJwt;
   DateTime? _jwtExpiry;
+  String _appVersion = '';
 
   ApiClient._({required Dio dio, required Account account})
       : _dio = dio,
@@ -33,16 +36,33 @@ class ApiClient {
 
     final client = ApiClient._(dio: dio, account: clientProvider.account);
 
+    // Initialize app version asynchronously
+    PackageInfo.fromPlatform().then((info) {
+      client._appVersion = info.version;
+    }).catchError((_) {
+      // Fallback if package info unavailable
+      client._appVersion = '';
+    });
+
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final jwt = await client._getJwt();
         if (jwt != null) {
           options.headers['Authorization'] = 'Bearer $jwt';
+          AppLogger.debug(
+            '${options.method} ${options.path}',
+            tag: _tag,
+          );
+          AppLogger.debug('FULL_JWT: $jwt', tag: _tag);
+        } else {
+          AppLogger.warning(
+            '${options.method} ${options.path} [NO JWT - guest request]',
+            tag: _tag,
+          );
         }
-        AppLogger.debug(
-          '${options.method} ${options.path}',
-          tag: _tag,
-        );
+        if (client._appVersion.isNotEmpty) {
+          options.headers['X-App-Version'] = client._appVersion;
+        }
         handler.next(options);
       },
       onError: (error, handler) {
@@ -51,6 +71,10 @@ class ApiClient {
           tag: _tag,
           error: error,
         );
+        // Intercept 426 globally and show upgrade dialog
+        if (error.response?.statusCode == 426) {
+          UpgradeDialog.show();
+        }
         handler.next(error);
       },
     ));
@@ -62,17 +86,20 @@ class ApiClient {
     if (_cachedJwt != null &&
         _jwtExpiry != null &&
         DateTime.now().isBefore(_jwtExpiry!)) {
+      AppLogger.debug('Using cached JWT', tag: _tag);
       return _cachedJwt;
     }
 
+    AppLogger.debug('Creating new JWT...', tag: _tag);
     try {
       final jwt = await _account.createJWT();
       _cachedJwt = jwt.jwt;
       // Appwrite JWTs last 15 min; refresh at 13 min
       _jwtExpiry = DateTime.now().add(const Duration(minutes: 13));
+      AppLogger.debug('JWT created successfully', tag: _tag);
       return _cachedJwt;
     } catch (e) {
-      AppLogger.warning('JWT creation failed (guest?): $e', tag: _tag);
+      AppLogger.error('JWT creation failed: $e', tag: _tag);
       _cachedJwt = null;
       _jwtExpiry = null;
       return null;
@@ -220,6 +247,21 @@ class ApiClient {
       case 422:
         return ValidationError(
             message: message, originalError: e, stackTrace: st);
+      case 426:
+        String? minVersion;
+        String? storeUrl;
+        if (body is Map<String, dynamic>) {
+          final details = (body['error'] as Map<String, dynamic>?)?['details'];
+          if (details is Map<String, dynamic>) {
+            minVersion = details['min_version']?.toString();
+            storeUrl = details['store_url']?.toString();
+          }
+        }
+        return UpgradeRequiredError(
+            minVersion: minVersion,
+            storeUrl: storeUrl,
+            originalError: e,
+            stackTrace: st);
       case 429:
         return RateLimitError(originalError: e, stackTrace: st);
       default:

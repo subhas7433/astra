@@ -98,6 +98,16 @@ final class WeakPasswordError extends AuthError {
   });
 }
 
+/// User account has been blocked
+final class UserBlockedError extends AuthError {
+  const UserBlockedError({
+    super.message = 'This account has been blocked. Please contact support.',
+    super.code = 'user_blocked',
+    super.originalError,
+    super.stackTrace,
+  });
+}
+
 /// General authentication error
 final class GeneralAuthError extends AuthError {
   const GeneralAuthError({
@@ -277,6 +287,23 @@ final class RateLimitError extends AppError {
   const RateLimitError({
     super.message = 'Too many requests. Please wait and try again.',
     super.code = 'rate_limit',
+    super.originalError,
+    super.stackTrace,
+  });
+}
+
+// ==================== VERSION ERRORS ====================
+
+/// App version is too old, user must update
+final class UpgradeRequiredError extends AppError {
+  final String? minVersion;
+  final String? storeUrl;
+
+  const UpgradeRequiredError({
+    this.minVersion,
+    this.storeUrl,
+    super.message = 'Please update the app to continue',
+    super.code = 'upgrade_required',
     super.originalError,
     super.stackTrace,
   });
