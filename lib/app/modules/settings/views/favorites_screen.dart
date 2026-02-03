@@ -5,15 +5,11 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../controllers/favorites_controller.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends GetView<FavoritesController> {
   const FavoritesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Ideally put in binding, but for now lazy put here
-    Get.lazyPut(() => FavoritesController());
-    final controller = Get.find<FavoritesController>();
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

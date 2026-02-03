@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../routes/app_routes.dart';
 import '../../../data/repositories/feedback_repository.dart';
 import '../../../core/services/interfaces/i_auth_service.dart';
+import '../../../core/constants/app_constants.dart';
 
 class SettingsController extends GetxController {
   
@@ -64,21 +67,81 @@ class SettingsController extends GetxController {
   }
 
   void onRateUs() async {
-    // Placeholder for store URLs
-    // final url = Platform.isAndroid 
-    //   ? 'market://details?id=com.technoava.astra' 
-    //   : 'https://apps.apple.com/app/id...';
-    // if (await canLaunch(url)) await launch(url);
-    
-    Get.snackbar(
-      'Rate Us', 
-      'Thank you for your interest! Store links will be available soon.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    final url = Platform.isAndroid
+      ? AppConstants.playStoreMarketUrl
+      : AppConstants.appStoreUrl;
+
+    final uri = Uri.parse(url);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback to web URL if market:// doesn't work
+        final webUrl = Uri.parse(Platform.isAndroid
+          ? AppConstants.playStoreUrl
+          : AppConstants.appStoreUrl);
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Could not open app store',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   void onRequestFeature() {
     Get.toNamed(AppRoutes.feedback); // Reuse feedback for feature request
+  }
+
+  Future<void> onPrivacy() async {
+    final uri = Uri.parse(AppConstants.privacyPolicyUrl);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        Get.snackbar(
+          'Error',
+          'Could not open privacy policy',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Could not open privacy policy',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> onTerms() async {
+    final uri = Uri.parse(AppConstants.termsOfServiceUrl);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        Get.snackbar(
+          'Error',
+          'Could not open terms of service',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Could not open terms of service',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   void onLogout() {

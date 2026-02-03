@@ -54,7 +54,7 @@ ${deity.value!.getDescription(isHindi: isHindi.value)}
 
 ${deity.value!.significance}
 
-Shared via Astro GPT
+Shared via Astra AI
 ''';
 
     // ignore: deprecated_member_use

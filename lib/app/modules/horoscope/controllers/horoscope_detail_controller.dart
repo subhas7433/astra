@@ -151,8 +151,8 @@ ${horoscope.predictionText}
 Lucky Number: ${horoscope.luckyNumbers.join(', ')}
 Lucky Color: ${horoscope.luckyColor}
 
-Download Astro GPT for more! 
-#AstroGPT #Horoscope #${zodiacSign.name}
+Download Astra AI for more!
+#AstraAI #Horoscope #${zodiacSign.name}
 ''';
   }
 }

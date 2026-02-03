@@ -53,7 +53,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             ),
             const SizedBox(height: AppDimensions.paddingSm),
             Text(
-              'Help us make Astro GPT better for everyone.',
+              'Help us make Astra AI better for everyone.',
               style: AppTypography.body1.copyWith(color: AppColors.textSecondary),
             ),
             

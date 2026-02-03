@@ -12,12 +12,7 @@ class NumerologyScreen extends GetView<NumerologyController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Numerology'),
-        centerTitle: true,
-      ),
       body: SafeArea(
-        top: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.paddingLg),
           child: Column(

@@ -87,14 +87,14 @@ class ProfileCard extends StatelessWidget {
               ),
             ),
             
-            // Edit Button
-            IconButton(
-              onPressed: onEditTap,
-              icon: const Icon(
-                Icons.edit_outlined,
-                color: AppColors.primary,
-              ),
-            ),
+            // Edit Button (paused for now)
+            // IconButton(
+            //   onPressed: onEditTap,
+            //   icon: const Icon(
+            //     Icons.edit_outlined,
+            //     color: AppColors.primary,
+            //   ),
+            // ),
           ],
         ),
       );

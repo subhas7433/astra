@@ -14,12 +14,7 @@ class SettingsScreen extends GetView<SettingsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Settings'),
-        centerTitle: true,
-      ),
       body: SafeArea(
-        top: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.paddingMd),
           child: Column(
@@ -30,40 +25,40 @@ class SettingsScreen extends GetView<SettingsController> {
             
             const SizedBox(height: AppDimensions.paddingXl),
 
-            // General Settings
-            Text(
-              'General',
-              style: AppTypography.h3.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.paddingSm),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-              ),
-              child: Column(
-                children: [
-                  SettingsItem(
-                    icon: Icons.language,
-                    title: 'Change Language',
-                    onTap: controller.onChangeLanguage,
-                  ),
-                  const Divider(height: 1),
-                  SettingsItem(
-                    icon: Icons.favorite_border,
-                    title: 'Favorites',
-                    onTap: controller.onFavorites,
-                    iconColor: Colors.red,
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: AppDimensions.paddingXl),
-            
+            // General Settings (hidden for now)
+            // Text(
+            //   'General',
+            //   style: AppTypography.h3.copyWith(
+            //     color: AppColors.textSecondary,
+            //     fontWeight: FontWeight.bold,
+            //   ),
+            // ),
+            // const SizedBox(height: AppDimensions.paddingSm),
+            // Container(
+            //   decoration: BoxDecoration(
+            //     color: AppColors.surface,
+            //     borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            //   ),
+            //   child: Column(
+            //     children: [
+            //       SettingsItem(
+            //         icon: Icons.language,
+            //         title: 'Change Language',
+            //         onTap: controller.onChangeLanguage,
+            //       ),
+            //       const Divider(height: 1),
+            //       SettingsItem(
+            //         icon: Icons.favorite_border,
+            //         title: 'Favorites',
+            //         onTap: controller.onFavorites,
+            //         iconColor: Colors.red,
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            //
+            // const SizedBox(height: AppDimensions.paddingXl),
+
             // Support & Feedback
             Text(
               'Support',
@@ -103,12 +98,24 @@ class SettingsScreen extends GetView<SettingsController> {
                     title: 'Request Feature',
                     onTap: controller.onRequestFeature,
                   ),
+                  const Divider(height: 1),
+                  SettingsItem(
+                    icon: Icons.privacy_tip_outlined,
+                    title: 'Privacy Policy',
+                    onTap: controller.onPrivacy,
+                  ),
+                  const Divider(height: 1),
+                  SettingsItem(
+                    icon: Icons.description_outlined,
+                    title: 'Terms of Service',
+                    onTap: controller.onTerms,
+                  ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: AppDimensions.paddingXl),
-            
+
             // Account Actions
             Container(
               decoration: BoxDecoration(
@@ -123,15 +130,16 @@ class SettingsScreen extends GetView<SettingsController> {
                     onTap: controller.onLogout,
                     iconColor: AppColors.textSecondary,
                   ),
-                  const Divider(height: 1),
-                  SettingsItem(
-                    icon: Icons.delete_outline,
-                    title: 'Delete Account',
-                    onTap: controller.onDeleteAccount,
-                    iconColor: AppColors.error,
-                    textColor: AppColors.error,
-                    trailing: const SizedBox.shrink(), // No arrow for delete
-                  ),
+                  // Hidden for now - delete account functionality
+                  // const Divider(height: 1),
+                  // SettingsItem(
+                  //   icon: Icons.delete_outline,
+                  //   title: 'Delete Account',
+                  //   onTap: controller.onDeleteAccount,
+                  //   iconColor: AppColors.error,
+                  //   textColor: AppColors.error,
+                  //   trailing: const SizedBox.shrink(), // No arrow for delete
+                  // ),
                 ],
               ),
             ),

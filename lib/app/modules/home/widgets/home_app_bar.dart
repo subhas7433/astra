@@ -3,53 +3,62 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
-import '../controllers/home_controller.dart';
+import '../../../controllers/user_controller.dart';
 
-class HomeAppBar extends GetView<HomeController> {
+class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userController = Get.find<UserController>();
+
     return Container(
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top,
-        left: AppDimensions.paddingMd,
-        right: AppDimensions.paddingMd,
+        top: MediaQuery.of(context).padding.top + AppDimensions.paddingSm,
+        left: AppDimensions.paddingLg,
+        right: AppDimensions.paddingLg,
         bottom: AppDimensions.paddingMd,
       ),
       decoration: const BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(AppDimensions.radiusLg),
-          bottomRight: Radius.circular(AppDimensions.radiusLg),
-        ),
+        color: AppColors.background,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Empty SizedBox to balance the row if we want centered title
-          // But design shows title might be centered or left. 
-          // Let's assume centered title for "Astro GPT" based on typical app patterns
-          // and the screenshot uploaded_image_0 which shows it quite central.
-          
-          // Actually, looking at uploaded_image_0, "Astro GPT" is centered.
-          // There is no left icon.
-          const SizedBox(width: 48), // Placeholder for balance
-
-          Text(
-            'Astro GPT',
-            style: AppTypography.h2.copyWith(
-              color: AppColors.textOnPrimary,
-              fontWeight: FontWeight.w300, // Thin font as per design
+          // User Greeting
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hello,',
+                  style: AppTypography.body2.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Obx(() {
+                  final user = userController.user.value;
+                  final name = user?.firstName ?? 'Guest';
+                  return Text(
+                    name,
+                    style: AppTypography.h2.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  );
+                }),
+              ],
             ),
           ),
 
+          // Notification Icon (placeholder for future)
           IconButton(
-            onPressed: controller.onSettingsTap,
+            onPressed: () {},
             icon: const Icon(
-              Icons.hexagon_outlined,
-              color: AppColors.textOnPrimary,
-              size: AppDimensions.iconLg,
+              Icons.notifications_outlined,
+              color: AppColors.textSecondary,
             ),
           ),
         ],

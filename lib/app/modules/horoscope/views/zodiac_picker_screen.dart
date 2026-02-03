@@ -12,12 +12,7 @@ class ZodiacPickerScreen extends GetView<ZodiacPickerController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Horoscope'),
-        centerTitle: true,
-      ),
       body: SafeArea(
-        top: false,
         child: Column(
           children: [
             const SizedBox(height: AppDimensions.lg),

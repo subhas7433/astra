@@ -70,7 +70,7 @@ ${mantra.value!.transliteration}
 Meaning:
 ${mantra.value!.getMeaning(isHindi: isHindi.value)}
 
-Shared via Astro GPT
+Shared via Astra AI
 ''';
 
     // ignore: deprecated_member_use

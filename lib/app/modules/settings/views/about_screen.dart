@@ -30,22 +30,19 @@ class AboutScreen extends StatelessWidget {
              const SizedBox(height: AppDimensions.paddingXl),
              
              // App Logo
-             Container(
-               width: 100,
-               height: 100,
-               decoration: BoxDecoration(
-                 color: AppColors.primary.withOpacity(0.1),
-                 shape: BoxShape.circle,
-               ),
-               child: const Center(
-                 child: Icon(Icons.auto_awesome, size: 60, color: AppColors.primary),
+             ClipRRect(
+               borderRadius: BorderRadius.circular(24),
+               child: Image.asset(
+                 'assets/images/app_logo.png',
+                 width: 100,
+                 height: 100,
                ),
              ),
              
              const SizedBox(height: AppDimensions.paddingMd),
              
              Text(
-               'Astro GPT',
+               'Astra AI',
                style: AppTypography.h1.copyWith(color: AppColors.primary),
              ),
              
@@ -71,7 +68,7 @@ class AboutScreen extends StatelessWidget {
                    ),
                    const SizedBox(height: AppDimensions.paddingMd),
                    Text(
-                     'Astro GPT combines ancient Vedic astrology wisdom with modern AI to provide personalized guidance, horoscopes, and spiritual insights tailored just for you.',
+                     'Astra AI combines ancient Vedic astrology wisdom with modern AI to provide personalized guidance, horoscopes, and spiritual insights tailored just for you.',
                      style: AppTypography.body1,
                      textAlign: TextAlign.center,
                    ),
@@ -81,9 +78,10 @@ class AboutScreen extends StatelessWidget {
              
              const SizedBox(height: AppDimensions.paddingXl),
              
-             _buildContactInfo(Icons.email_outlined, 'support@astrogpt.com', 'Email Us'),
-             const SizedBox(height: AppDimensions.paddingSm),
-             _buildContactInfo(Icons.language, 'www.astrogpt.com', 'Visit Website'),
+             // Hidden for now
+             // _buildContactInfo(Icons.email_outlined, 'support@astrogpt.com', 'Email Us'),
+             // const SizedBox(height: AppDimensions.paddingSm),
+             // _buildContactInfo(Icons.language, 'www.astrogpt.com', 'Visit Website'),
              
              const SizedBox(height: AppDimensions.paddingXl * 2),
              
