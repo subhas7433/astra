@@ -1,4 +1,4 @@
-package com.technoava.astra.astra;
+package com.technoava.astra;
 
 import io.flutter.embedding.android.FlutterActivity;
 
