@@ -9,7 +9,7 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
-  String get appName => 'Astro GPT';
+  String get appName => 'Astra AI';
 
   @override
   String get home => 'Home';
