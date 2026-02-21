@@ -25,6 +25,10 @@ class SettingsController extends GetxController {
     Get.toNamed(AppRoutes.favorites);
   }
 
+  void onPalmReadingHistory() {
+    Get.toNamed(AppRoutes.palmReadingHistory);
+  }
+
   final FeedbackRepository _feedbackRepository = FeedbackRepository();
 
   void onAboutUs() {

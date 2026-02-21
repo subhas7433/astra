@@ -56,6 +56,16 @@ abstract class AppRoutes {
   /// Numerology screen
   static const String numerology = '/numerology';
 
+  // ============ Palmistry ============
+  /// Palm reading upload screen
+  static const String palmistry = '/palmistry';
+
+  /// Palm reading chat (parameterized)
+  static const String palmReadingChat = '/palmistry/reading/:readingId';
+
+  /// Palm reading history (list of past readings)
+  static const String palmReadingHistory = '/palmistry/history';
+
   // ============ Settings ============
   /// Settings main screen
   static const settings = '/settings';
@@ -83,4 +93,9 @@ abstract class AppRoutes {
   /// Build horoscope detail route with zodiac sign
   /// Example: `/horoscope/aries`
   static String horoscopeDetailWithSign(String sign) => '/horoscope/$sign';
+
+  /// Build palm reading chat route with reading ID
+  /// Example: `/palmistry/reading/abc123-def456`
+  static String palmReadingChatWithId(String readingId) =>
+      '/palmistry/reading/$readingId';
 }

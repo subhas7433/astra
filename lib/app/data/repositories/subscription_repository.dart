@@ -101,6 +101,7 @@ class SubscriptionData {
   final String tier;
   final String status;
   final int chatCredits;
+  final int dailyCreditLimit;
   final bool adsRemoved;
   final DateTime? startDate;
   final DateTime? endDate;
@@ -110,6 +111,7 @@ class SubscriptionData {
     required this.tier,
     required this.status,
     required this.chatCredits,
+    required this.dailyCreditLimit,
     required this.adsRemoved,
     this.startDate,
     this.endDate,
@@ -120,7 +122,8 @@ class SubscriptionData {
       id: '',
       tier: 'free',
       status: 'active',
-      chatCredits: 3,
+      chatCredits: 10,
+      dailyCreditLimit: 10,
       adsRemoved: false,
     );
   }
@@ -131,12 +134,14 @@ class SubscriptionData {
       tier: json['tier']?.toString() ?? 'free',
       status: json['status']?.toString() ?? 'active',
       chatCredits: (json['chat_credits'] as num?)?.toInt() ?? 0,
+      dailyCreditLimit: (json['daily_credit_limit'] as num?)?.toInt() ?? 10,
       adsRemoved: json['ads_removed'] as bool? ?? false,
       startDate: DateTime.tryParse(json['start_date']?.toString() ?? ''),
       endDate: DateTime.tryParse(json['end_date']?.toString() ?? ''),
     );
   }
 
-  bool get isPremium => tier != 'free' && status == 'active';
+  bool get isPro => tier == 'pro' && status == 'active';
+  bool get isPremium => isPro; // Backward compatibility
   bool get hasCredits => chatCredits > 0;
 }

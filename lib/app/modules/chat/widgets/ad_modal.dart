@@ -101,7 +101,37 @@ class AdModal extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppDimensions.md),
+            const SizedBox(height: AppDimensions.sm),
+
+            // Upgrade to Pro Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  Get.back(); // Close dialog
+                  onRemoveAds();
+                },
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.star, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Upgrade to Pro',
+                      style: AppTypography.button.copyWith(color: AppColors.primary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.sm),
 
             // No Thanks
             TextButton(

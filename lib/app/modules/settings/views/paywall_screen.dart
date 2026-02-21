@@ -74,7 +74,7 @@ class PaywallScreen extends GetView<SubscriptionService> {
 
                         // Title
                         Text(
-                          'Unlock Premium',
+                          'Unlock Pro',
                           style: AppTypography.h2.copyWith(
                             color: AppColors.textPrimary,
                           ),
@@ -186,20 +186,15 @@ class PaywallScreen extends GetView<SubscriptionService> {
   Widget _buildPackageCard(PaywallPackage package) {
     // Styling based on Tier
     final isPro = package.tier == SubscriptionTier.pro;
-    final isPremium = package.tier == SubscriptionTier.premium;
-    final isPopular = isPro; // Designating Pro as popular
 
     Color borderColor = AppColors.primary.withOpacity(0.3);
     Color backgroundColor = Colors.white;
     double borderWidth = 1;
 
-    if (isPopular) {
+    if (isPro) {
       borderColor = AppColors.primary;
       borderWidth = 2;
       backgroundColor = AppColors.primary.withOpacity(0.05);
-    } else if (isPremium) {
-      borderColor = Colors.amber;
-      backgroundColor = Colors.amber.withOpacity(0.05);
     }
 
     return Stack(
@@ -224,7 +219,7 @@ class PaywallScreen extends GetView<SubscriptionService> {
               border: Border.all(color: borderColor, width: borderWidth),
               borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
               color: backgroundColor,
-              boxShadow: isPopular ? [
+              boxShadow: isPro ? [
                 BoxShadow(
                   color: AppColors.primary.withOpacity(0.1),
                   blurRadius: 10,
@@ -244,9 +239,9 @@ class PaywallScreen extends GetView<SubscriptionService> {
                             package.title,
                             style: AppTypography.h3.copyWith(fontSize: 16),
                           ),
-                          if (isPremium) ...[
+                          if (isPro) ...[
                             const SizedBox(width: 4),
-                            const Icon(Icons.star, size: 16, color: Colors.amber),
+                            const Icon(Icons.star, size: 16, color: AppColors.primary),
                           ]
                         ],
                       ),
@@ -273,7 +268,7 @@ class PaywallScreen extends GetView<SubscriptionService> {
             ),
           ),
         ),
-        if (isPopular)
+        if (isPro)
           Positioned(
             top: 0,
             right: 20,

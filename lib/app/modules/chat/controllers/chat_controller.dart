@@ -120,9 +120,9 @@ class ChatController extends GetxController {
       return;
     }
 
-    // Check Free Limit (if not premium)
-    final isPremium = Get.find<SubscriptionService>().isPremium;
-    if (!isPremium && freeMessageCount.value <= 0) {
+    // Check Free Limit (if not pro subscriber)
+    final isPro = Get.find<SubscriptionService>().isPro;
+    if (!isPro && freeMessageCount.value <= 0) {
       _showAdModal();
       return;
     }
@@ -211,7 +211,7 @@ class ChatController extends GetxController {
 
   void _removeAds() {
     Get.back();
-    Get.toNamed('/settings/paywall');
+    SubscriptionService.to.showPaywall();
   }
 
   void scrollToBottom() {

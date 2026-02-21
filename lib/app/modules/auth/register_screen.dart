@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_typography.dart';
+import '../../data/models/enums/gender.dart';
 import '../../widgets/buttons/app_button.dart';
 import '../../widgets/feedback/error_box.dart';
 import '../../widgets/inputs/app_text_field.dart';
@@ -141,6 +142,70 @@ class RegisterScreen extends GetView<AuthController> {
             ),
           );
         }),
+        const SizedBox(height: AppDimensions.sm),
+
+        // Gender Selector
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Gender',
+              style: AppTypography.body2.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.xs),
+            Obx(() => Row(
+                  children: Gender.values.map((gender) {
+                    final isSelected =
+                        controller.selectedGender.value == gender;
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: gender != Gender.other
+                              ? AppDimensions.xs
+                              : 0,
+                        ),
+                        child: GestureDetector(
+                          onTap: () =>
+                              controller.selectedGender.value = gender,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppDimensions.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.primary.withValues(alpha: 0.1)
+                                  : AppColors.surface,
+                              borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusSm),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.divider,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              gender.displayName,
+                              style: AppTypography.body2.copyWith(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                )),
+          ],
+        ),
         const SizedBox(height: AppDimensions.sm),
 
         // Password Field

@@ -109,7 +109,7 @@ class AdService extends GetxService with WidgetsBindingObserver {
   }
 
   void showAppOpenAdIfAvailable() {
-    if (_subscriptionService.isPremium) {
+    if (_subscriptionService.isPro) {
       return;
     }
     
@@ -171,7 +171,7 @@ class AdService extends GetxService with WidgetsBindingObserver {
   }
 
   Future<bool> showRewardedAd() async {
-    if (_subscriptionService.isPremium) {
+    if (_subscriptionService.isPro) {
       return true; // Premium users skip ads and get reward immediately
     }
 

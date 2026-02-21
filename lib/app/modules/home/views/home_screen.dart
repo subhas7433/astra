@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_typography.dart';
+import '../../../core/services/impl/subscription_service.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/astrologers_section.dart';
 import '../widgets/feature_icons_grid.dart';
@@ -103,10 +105,10 @@ class HomeScreen extends GetView<HomeController> {
                             onTap: () => Get.toNamed(AppRoutes.numerology),
                           ),
                           FeatureIconItem(
-                            label: 'History',
-                            icon: Icons.history,
-                            color: AppColors.capricornColor,
-                            onTap: () => print('History tapped'),
+                            label: 'Palm Reading',
+                            icon: Icons.back_hand_outlined,
+                            color: AppColors.brown,
+                            onTap: () => Get.toNamed(AppRoutes.palmistry),
                           ),
                         ],
                       ),
@@ -136,8 +138,39 @@ class HomeScreen extends GetView<HomeController> {
               ),
             ),
           ),
-          // Banner Ad
-          const SizedBox(height: AppDimensions.paddingMd),
+          // Upgrade Strip (free users only)
+          Obx(() {
+            final isPro = Get.find<SubscriptionService>().isPro;
+            if (isPro) return const SizedBox.shrink();
+            return GestureDetector(
+              onTap: () => SubscriptionService.to.showPaywall(),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingMd,
+                  vertical: 10,
+                ),
+                color: AppColors.primary,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.star, color: Colors.white, size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Upgrade to Pro - No ads, 100 credits/day',
+                      style: AppTypography.caption.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right, color: Colors.white, size: 16),
+                  ],
+                ),
+              ),
+            );
+          }),
+          // Banner Ad (hidden for pro users by BannerAdWidget itself)
           const Center(child: BannerAdWidget()),
           const SizedBox(height: AppDimensions.paddingMd),
           ],

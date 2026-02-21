@@ -3,13 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import '../../../data/repositories/subscription_repository.dart';
 import '../../../data/services/monetization_analytics.dart';
 
 enum SubscriptionTier {
   free,
-  basic,
   pro,
-  premium,
 }
 
 class PaywallPackage {
@@ -33,21 +33,19 @@ class PaywallPackage {
 class SubscriptionService extends GetxService {
   static SubscriptionService get to => Get.find();
 
-  // TODO: Replace with your actual RevenueCat API Keys
-  final String _androidApiKey = 'goog_placeholder_key';
-  final String _iosApiKey = 'appl_placeholder_key';
+  // RevenueCat API Keys
+  final String _apiKey = 'goog_lVAzHDPmGglondnPxKJLFbIkZFt';
 
-  // Toggle this for testing
-  final bool _isMockMode = true;
+  // Set to false for real RevenueCat (true for UI testing without store)
+  final bool _isMockMode = false;
 
   final currentTier = SubscriptionTier.free.obs;
   final packages = <PaywallPackage>[].obs;
   final isLoading = true.obs;
 
   // Computed properties for feature gating
-  bool get isPremium => currentTier.value == SubscriptionTier.premium;
-  bool get isAdFree => currentTier.value != SubscriptionTier.free;
-  bool get hasUnlimitedChat => currentTier.value.index >= SubscriptionTier.pro.index;
+  bool get isPro => currentTier.value == SubscriptionTier.pro;
+  bool get isAdFree => currentTier.value == SubscriptionTier.pro;
 
   @override
   void onInit() {
@@ -58,11 +56,7 @@ class SubscriptionService extends GetxService {
   Future<void> initialize() async {
     try {
       if (!_isMockMode) {
-        if (Platform.isAndroid) {
-          await Purchases.configure(PurchasesConfiguration(_androidApiKey));
-        } else if (Platform.isIOS) {
-          await Purchases.configure(PurchasesConfiguration(_iosApiKey));
-        }
+        await Purchases.configure(PurchasesConfiguration(_apiKey));
         await _checkSubscriptionStatus();
       }
       await fetchOfferings();
@@ -82,13 +76,8 @@ class SubscriptionService extends GetxService {
   }
 
   void _updateCustomerStatus(CustomerInfo customerInfo) {
-    // Map entitlements to tiers
-    if (customerInfo.entitlements.all['premium_access']?.isActive ?? false) {
-      currentTier.value = SubscriptionTier.premium;
-    } else if (customerInfo.entitlements.all['pro_access']?.isActive ?? false) {
+    if (customerInfo.entitlements.all['pro_access']?.isActive ?? false) {
       currentTier.value = SubscriptionTier.pro;
-    } else if (customerInfo.entitlements.all['basic_access']?.isActive ?? false) {
-      currentTier.value = SubscriptionTier.basic;
     } else {
       currentTier.value = SubscriptionTier.free;
     }
@@ -102,43 +91,30 @@ class SubscriptionService extends GetxService {
         await Future.delayed(const Duration(seconds: 1));
         packages.value = [
           PaywallPackage(
-            identifier: 'monthly_basic',
-            title: 'Basic',
-            description: 'No Ads',
-            priceString: '\$2.99',
-            tier: SubscriptionTier.basic,
-          ),
-          PaywallPackage(
-            identifier: 'monthly_pro',
-            title: 'Pro',
-            description: 'Unlimited Chat + No Ads',
-            priceString: '\$5.99/mo',
+            identifier: 'astro_pro_weekly',
+            title: 'Pro Weekly',
+            description: 'No Ads + 100 Credits/Day',
+            priceString: '\u20B9250/week',
             tier: SubscriptionTier.pro,
           ),
           PaywallPackage(
-            identifier: 'monthly_premium',
-            title: 'Premium',
-            description: 'All Features + Priority Support',
-            priceString: '\$9.99/mo',
-            tier: SubscriptionTier.premium,
+            identifier: 'astro_pro_monthly',
+            title: 'Pro Monthly',
+            description: 'No Ads + 100 Credits/Day',
+            priceString: '\u20B9600/month',
+            tier: SubscriptionTier.pro,
           ),
         ];
       } else {
         final offerings = await Purchases.getOfferings();
         if (offerings.current != null) {
           packages.value = offerings.current!.availablePackages.map((p) {
-            // Logically map package ID to tier, or use metadata if available
-            // For now, simple fallback
-            var tier = SubscriptionTier.premium;
-            if (p.identifier.contains('basic')) tier = SubscriptionTier.basic;
-            if (p.identifier.contains('pro')) tier = SubscriptionTier.pro;
-
             return PaywallPackage(
               identifier: p.identifier,
               title: p.storeProduct.title,
               description: p.storeProduct.description,
               priceString: p.storeProduct.priceString,
-              tier: tier,
+              tier: SubscriptionTier.pro,
               realPackage: p,
             );
           }).toList();
@@ -161,6 +137,19 @@ class SubscriptionService extends GetxService {
         if (package.realPackage != null) {
           final purchaseResult = await Purchases.purchasePackage(package.realPackage!);
           _updateCustomerStatus(purchaseResult.customerInfo);
+          // Sync with backend
+          try {
+            final repo = Get.find<SubscriptionRepository>();
+            await repo.updateSubscription(
+              userId: '',
+              tier: 'pro',
+              platform: Platform.isAndroid ? 'android' : 'ios',
+              productId: package.identifier,
+              transactionId: purchaseResult.customerInfo.originalAppUserId,
+            );
+          } catch (e) {
+            debugPrint('Error syncing subscription with backend: $e');
+          }
           MonetizationAnalytics.trackSubscriptionStart(package.identifier, package.priceString);
           return true;
         }
@@ -196,11 +185,22 @@ class SubscriptionService extends GetxService {
     }
   }
 
+  Future<void> showPaywall() async {
+    try {
+      final result = await RevenueCatUI.presentPaywallIfNeeded('pro_access');
+      if (result == PaywallResult.purchased || result == PaywallResult.restored) {
+        await _checkSubscriptionStatus();
+      }
+    } catch (e) {
+      debugPrint('Error presenting paywall: $e');
+    }
+  }
+
   Future<void> restorePurchases() async {
     try {
       if (_isMockMode) {
         await Future.delayed(const Duration(seconds: 1));
-        currentTier.value = SubscriptionTier.premium; // Restore to max in mock
+        currentTier.value = SubscriptionTier.pro;
       } else {
         final customerInfo = await Purchases.restorePurchases();
         _updateCustomerStatus(customerInfo);

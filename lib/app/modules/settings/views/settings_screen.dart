@@ -6,6 +6,7 @@ import '../widgets/settings_item.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/services/impl/subscription_service.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -22,7 +23,96 @@ class SettingsScreen extends GetView<SettingsController> {
           children: [
             // Profile Section
             ProfileCard(onEditTap: controller.onProfileEdit),
-            
+            const SizedBox(height: AppDimensions.paddingMd),
+
+            // Subscription Status Card
+            Obx(() {
+              final isPro = Get.find<SubscriptionService>().isPro;
+              return GestureDetector(
+                onTap: () => SubscriptionService.to.showPaywall(),
+                child: Container(
+                  padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                  decoration: BoxDecoration(
+                    gradient: isPro ? null : AppColors.primaryGradient,
+                    color: isPro ? AppColors.surface : null,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.shadowLight,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isPro ? Icons.check_circle : Icons.star,
+                        color: isPro ? AppColors.success : Colors.white,
+                        size: 28,
+                      ),
+                      const SizedBox(width: AppDimensions.paddingSm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isPro ? 'Pro Member' : 'Upgrade to Pro',
+                              style: AppTypography.body1.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: isPro ? AppColors.textPrimary : Colors.white,
+                              ),
+                            ),
+                            if (!isPro) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                'No ads, 100 credits/day',
+                                style: AppTypography.caption.copyWith(
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (!isPro)
+                        const Icon(
+                          Icons.chevron_right,
+                          color: Colors.white,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+
+            const SizedBox(height: AppDimensions.paddingXl),
+
+            // Activity Section
+            Text(
+              'Activity',
+              style: AppTypography.h3.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.paddingSm),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              ),
+              child: Column(
+                children: [
+                  SettingsItem(
+                    icon: Icons.back_hand_outlined,
+                    title: 'Palm Reading History',
+                    onTap: controller.onPalmReadingHistory,
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: AppDimensions.paddingXl),
 
             // General Settings (hidden for now)

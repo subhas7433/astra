@@ -31,8 +31,8 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   }
 
   void _loadAd() {
-    // Don't load if premium
-    if (_subscriptionService.isPremium) return;
+    // Don't load if pro subscriber
+    if (_subscriptionService.isPro) return;
 
     _bannerAd = BannerAd(
       adUnitId: _adService.bannerAdUnitId,
@@ -72,8 +72,8 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Hide if premium upgrades happen while on screen
-      if (_subscriptionService.isPremium) {
+      // Hide if pro upgrades happen while on screen
+      if (_subscriptionService.isPro) {
         return const SizedBox.shrink();
       }
 

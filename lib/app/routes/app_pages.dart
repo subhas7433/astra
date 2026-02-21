@@ -41,6 +41,12 @@ import '../modules/settings/views/terms_screen.dart';
 import '../modules/settings/views/paywall_screen.dart';
 import '../modules/navigation/bindings/navigation_binding.dart';
 import '../modules/navigation/views/main_shell.dart';
+import '../modules/palmistry/bindings/palm_reading_binding.dart';
+import '../modules/palmistry/bindings/palm_reading_chat_binding.dart';
+import '../modules/palmistry/bindings/palm_reading_history_binding.dart';
+import '../modules/palmistry/views/palm_upload_screen.dart';
+import '../modules/palmistry/views/palm_reading_chat_screen.dart';
+import '../modules/palmistry/views/palm_reading_history_screen.dart';
 import 'app_routes.dart';
 
 /// GetX page definitions for app navigation.
@@ -277,6 +283,35 @@ class AppPages {
       page: () => const ZodiacPickerScreen(),
       binding: ZodiacPickerBinding(),
       transition: defaultTransition,
+      transitionDuration: transitionDuration,
+    ),
+
+    // ============ Palmistry ============
+
+    /// Palm reading upload screen
+    GetPage(
+      name: AppRoutes.palmistry,
+      page: () => const PalmUploadScreen(),
+      binding: PalmReadingBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    /// Palm reading chat screen
+    GetPage(
+      name: AppRoutes.palmReadingChat,
+      page: () => const PalmReadingChatScreen(),
+      binding: PalmReadingChatBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: transitionDuration,
+    ),
+
+    /// Palm reading history screen
+    GetPage(
+      name: AppRoutes.palmReadingHistory,
+      page: () => const PalmReadingHistoryScreen(),
+      binding: PalmReadingHistoryBinding(),
+      transition: Transition.rightToLeft,
       transitionDuration: transitionDuration,
     ),
   ];

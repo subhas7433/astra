@@ -5,6 +5,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../routes/app_routes.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/astrologers_section.dart';
+import '../widgets/feature_icons_grid.dart';
 import '../widgets/home_app_bar.dart';
 import '../widgets/today_mantra_card.dart';
 import '../widgets/today_bhagwan_card.dart';
@@ -81,6 +82,37 @@ class _HomeTabViewState extends State<HomeTabView>
                             onViewDetails: _navigateToDeity,
                           );
                         }),
+                        const SizedBox(height: AppDimensions.lg),
+
+                        // Feature Icons
+                        FeatureIconsGrid(
+                          items: [
+                            FeatureIconItem(
+                              label: 'Horoscope',
+                              icon: Icons.stars,
+                              color: AppColors.ariesColor,
+                              onTap: () => Get.toNamed(AppRoutes.horoscope),
+                            ),
+                            FeatureIconItem(
+                              label: 'Today God',
+                              icon: Icons.temple_hindu,
+                              color: AppColors.primary,
+                              onTap: _navigateToDeity,
+                            ),
+                            FeatureIconItem(
+                              label: 'Numerology',
+                              icon: Icons.numbers,
+                              color: AppColors.aquariusColor,
+                              onTap: () => Get.toNamed(AppRoutes.numerology),
+                            ),
+                            FeatureIconItem(
+                              label: 'Palm Reading',
+                              icon: Icons.back_hand_outlined,
+                              color: AppColors.brown,
+                              onTap: () => Get.toNamed(AppRoutes.palmistry),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: AppDimensions.lg),
 
                         // Astrologers Section

@@ -4,6 +4,7 @@ import '../../../controllers/user_controller.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/services/impl/subscription_service.dart';
 
 class ProfileCard extends StatelessWidget {
   final VoidCallback onEditTap;
@@ -83,6 +84,25 @@ class ProfileCard extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Obx(() {
+                    final isPro = Get.find<SubscriptionService>().isPro;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isPro ? AppColors.primary : AppColors.chipBackground,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isPro ? 'Pro' : 'Free',
+                        style: AppTypography.caption.copyWith(
+                          color: isPro ? Colors.white : AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),

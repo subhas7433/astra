@@ -44,6 +44,9 @@ class AuthController extends BaseController {
   /// Date of birth (for registration)
   final Rxn<DateTime> dateOfBirth = Rxn<DateTime>();
 
+  /// Gender selection (for registration)
+  final Rx<Gender> selectedGender = Gender.other.obs;
+
   // ============ Form State ============
 
   /// Form key for login form validation
@@ -163,7 +166,7 @@ class AuthController extends BaseController {
             id: userId,
             email: emailController.text.trim(),
             fullName: nameController.text.trim(),
-            gender: Gender.other,
+            gender: selectedGender.value,
             dateOfBirth: dateOfBirth.value!,
             createdAt: now,
             updatedAt: now,
@@ -299,6 +302,7 @@ class AuthController extends BaseController {
     isPasswordVisible.value = false;
     isConfirmPasswordVisible.value = false;
     dateOfBirth.value = null;
+    selectedGender.value = Gender.other;
     termsAccepted.value = false;
   }
 

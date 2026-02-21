@@ -6,7 +6,7 @@ class PaywallController extends GetxController {
 
   RxList<PaywallPackage> get packages => _subscriptionService.packages;
   RxBool get isLoading => _subscriptionService.isLoading;
-  bool get isPremium => _subscriptionService.isPremium;
+  bool get isPro => _subscriptionService.isPro;
 
   final isPurchaseLoading = false.obs;
 
@@ -27,7 +27,7 @@ class PaywallController extends GetxController {
     if (success) {
       Get.back(); // Close paywall on success
       Get.snackbar(
-        'Welcome to Premium!',
+        'Welcome to Pro!',
         'Thank you for subscribing.',
         snackPosition: SnackPosition.BOTTOM,
       );
@@ -41,8 +41,8 @@ class PaywallController extends GetxController {
     await _subscriptionService.restorePurchases();
     isPurchaseLoading.value = false;
     
-    // Feedback is handled by service or we can check premium status
-    if (isPremium) {
+    // Feedback is handled by service or we can check pro status
+    if (isPro) {
       Get.back();
       Get.snackbar('Success', 'Purchases restored.');
     } else {

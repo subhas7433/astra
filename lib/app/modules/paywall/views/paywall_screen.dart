@@ -49,13 +49,13 @@ class PaywallScreen extends GetView<PaywallController> {
 
                 // Title
                 Text(
-                  'Unlock Premium',
+                  'Upgrade to Pro',
                   style: AppTypography.h2,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppDimensions.sm),
                 Text(
-                  'Get unlimited AI chat, removing all ads, and access daily personalized content.',
+                  'Remove all ads and get 100 credits per day for AI consultations.',
                   style: AppTypography.body1.copyWith(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
@@ -63,8 +63,8 @@ class PaywallScreen extends GetView<PaywallController> {
 
                 // Features List
                 _buildFeatureRow('No Advertisements'),
-                _buildFeatureRow('Unlimited AI Chat'),
-                _buildFeatureRow('Detailed Horoscopes'),
+                _buildFeatureRow('100 AI Credits Per Day'),
+                _buildFeatureRow('Detailed Palm & Horoscope Readings'),
                 _buildFeatureRow('Priority Support'),
                 const SizedBox(height: AppDimensions.xxl),
 

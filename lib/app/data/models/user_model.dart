@@ -17,6 +17,8 @@ class UserModel extends Equatable {
   final String preferredLanguage;
   final String? profilePhotoUrl;
   final String? fcmToken;
+  final String? birthTime;
+  final String? birthPlace;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -30,6 +32,8 @@ class UserModel extends Equatable {
     this.preferredLanguage = 'en',
     this.profilePhotoUrl,
     this.fcmToken,
+    this.birthTime,
+    this.birthPlace,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -52,6 +56,8 @@ class UserModel extends Equatable {
       preferredLanguage: map.getString('preferredLanguage', defaultValue: 'en'),
       profilePhotoUrl: map.getField<String>('profilePhotoUrl'),
       fcmToken: map.getField<String>('fcmToken'),
+      birthTime: map.getField<String>('birthTime'),
+      birthPlace: map.getField<String>('birthPlace'),
       createdAt: map.appwriteCreatedAt ?? DateTime.now(),
       updatedAt: map.appwriteUpdatedAt ?? DateTime.now(),
     );
@@ -74,6 +80,8 @@ class UserModel extends Equatable {
       preferredLanguage: json['preferred_language']?.toString() ?? 'en',
       profilePhotoUrl: json['profile_photo_url']?.toString(),
       fcmToken: json['fcm_token']?.toString(),
+      birthTime: json['birth_time']?.toString(),
+      birthPlace: json['birth_place']?.toString(),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
       updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
@@ -91,6 +99,8 @@ class UserModel extends Equatable {
       'preferred_language': preferredLanguage,
       'profile_photo_url': profilePhotoUrl,
       'fcm_token': fcmToken,
+      'birth_time': birthTime,
+      'birth_place': birthPlace,
     };
   }
 
@@ -106,6 +116,8 @@ class UserModel extends Equatable {
       'preferredLanguage': preferredLanguage,
       'profilePhotoUrl': profilePhotoUrl,
       'fcmToken': fcmToken,
+      'birthTime': birthTime,
+      'birthPlace': birthPlace,
       'createdAt': createdAt.toAppwriteString(),
       'updatedAt': updatedAt.toAppwriteString(),
     };
@@ -181,6 +193,8 @@ class UserModel extends Equatable {
     String? preferredLanguage,
     String? profilePhotoUrl,
     String? fcmToken,
+    String? birthTime,
+    String? birthPlace,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -194,6 +208,8 @@ class UserModel extends Equatable {
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       fcmToken: fcmToken ?? this.fcmToken,
+      birthTime: birthTime ?? this.birthTime,
+      birthPlace: birthPlace ?? this.birthPlace,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -240,6 +256,8 @@ class UserModel extends Equatable {
         preferredLanguage,
         profilePhotoUrl,
         fcmToken,
+        birthTime,
+        birthPlace,
         createdAt,
         updatedAt,
       ];

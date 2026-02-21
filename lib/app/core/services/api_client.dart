@@ -30,7 +30,7 @@ class ApiClient {
     final dio = Dio(BaseOptions(
       baseUrl: config.apiBaseUrl,
       connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(minutes: 5),
       headers: {'Content-Type': 'application/json'},
     ));
 
@@ -135,6 +135,29 @@ class ApiClient {
     try {
       final response = await _dio.post(path,
           data: data, queryParameters: queryParameters);
+      return _handleResponse(response);
+    } on DioException catch (e, st) {
+      return Result.failure(_mapDioError(e, st));
+    } catch (e, st) {
+      return Result.failure(UnknownError(originalError: e, stackTrace: st));
+    }
+  }
+
+  /// Post multipart form data (for file uploads).
+  ///
+  /// FormData automatically sets Content-Type to multipart/form-data.
+  /// JWT auth is still applied via interceptor.
+  Future<Result<Map<String, dynamic>, AppError>> postMultipart(
+    String path,
+    FormData formData, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.post(
+        path,
+        data: formData,
+        queryParameters: queryParameters,
+      );
       return _handleResponse(response);
     } on DioException catch (e, st) {
       return Result.failure(_mapDioError(e, st));
