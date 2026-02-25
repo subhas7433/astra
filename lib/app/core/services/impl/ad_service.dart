@@ -5,9 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'subscription_service.dart';
+import 'package:astra/app/core/services/interfaces/i_auth_service.dart';
 
 class AdService extends GetxService with WidgetsBindingObserver {
   static AdService get to => Get.find();
+
+  // Set to true to use production ad IDs in debug builds
+  static const bool _forceProductionAds = true;
 
   // Test Ad Unit IDs
   final String _androidBannerIdTest = 'ca-app-pub-3940256099942544/6300978111';
@@ -37,21 +41,21 @@ class AdService extends GetxService with WidgetsBindingObserver {
   final String _iosRewardedIdProd = 'ca-app-pub-2063094445044192/6676373300';
 
   String get bannerAdUnitId {
-    if (kDebugMode) {
+    if (kDebugMode && !_forceProductionAds) {
       return Platform.isAndroid ? _androidBannerIdTest : _iosBannerIdTest;
     }
     return Platform.isAndroid ? _androidBannerIdProd : _iosBannerIdProd;
   }
 
   String get appOpenAdUnitId {
-    if (kDebugMode) {
+    if (kDebugMode && !_forceProductionAds) {
       return Platform.isAndroid ? _androidAppOpenIdTest : _iosAppOpenIdTest;
     }
     return Platform.isAndroid ? _androidAppOpenIdProd : _iosAppOpenIdProd;
   }
 
   String get rewardedAdUnitId {
-    if (kDebugMode) {
+    if (kDebugMode && !_forceProductionAds) {
       return Platform.isAndroid ? _androidRewardedIdTest : _iosRewardedIdTest;
     }
     return Platform.isAndroid ? _androidRewardedIdProd : _iosRewardedIdProd;
@@ -177,6 +181,14 @@ class AdService extends GetxService with WidgetsBindingObserver {
 
     debugPrint('Attempting to show Rewarded Ad. Ready: ${isRewardedReady.value}');
     if (_rewardedAd != null && isRewardedReady.value) {
+      final authService = Get.find<IAuthService>();
+      final userId = authService.currentUserId ?? '';
+      debugPrint('AdMob SSV: Setting custom_data userId=$userId');
+
+      _rewardedAd!.setServerSideOptions(
+        ServerSideVerificationOptions(customData: userId),
+      );
+
       final Completer<bool> completer = Completer<bool>();
       bool rewardEarned = false;
 

@@ -12,6 +12,7 @@ import 'impl/appwrite_database_service.dart';
 import 'impl/appwrite_storage_service.dart';
 import 'impl/ad_service.dart';
 import 'impl/subscription_service.dart';
+import '../../data/repositories/subscription_repository.dart';
 import 'mock/mock_auth_service.dart';
 import 'mock/mock_database_service.dart';
 import 'mock/mock_storage_service.dart';
@@ -124,6 +125,7 @@ class ServiceLocator {
 
   /// Register app-level feature services
   static Future<void> registerFeatureServices() async {
+     Get.put(SubscriptionRepository(), permanent: true);
      Get.put(SubscriptionService(), permanent: true);
      Get.put(AdService(), permanent: true);
      AppLogger.debug('Feature services registered', tag: _tag);

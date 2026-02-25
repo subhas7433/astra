@@ -69,11 +69,29 @@ tasks.register<Copy>("syncFlutterApks") {
     }
 }
 
+// Same workaround for AAB bundles
+val bundleOutDir = file("$buildDir/outputs/bundle")
+val cliBundleOutDir = file("${rootDir.parentFile}/build/app/outputs/bundle")
+
+tasks.register<Copy>("syncFlutterBundles") {
+    from(bundleOutDir)
+    into(cliBundleOutDir)
+    doFirst {
+        cliBundleOutDir.mkdirs()
+    }
+}
+
 android.applicationVariants.all {
     val variantName = name.replaceFirstChar { it.uppercase() }
     listOf("package$variantName", "assemble$variantName").forEach { taskName ->
         tasks.matching { it.name == taskName }.configureEach {
             finalizedBy(tasks.named("syncFlutterApks"))
+        }
+    }
+    // Sync bundles after bundle tasks
+    listOf("bundle$variantName").forEach { taskName ->
+        tasks.matching { it.name == taskName }.configureEach {
+            finalizedBy(tasks.named("syncFlutterBundles"))
         }
     }
 }

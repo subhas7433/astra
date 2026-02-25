@@ -27,7 +27,7 @@ class ChatController extends GetxController {
 
   String? _sessionId;
 
-  RxInt get freeMessageCount => _adService.freeMessageCount;
+  RxInt get chatCredits => Get.find<SubscriptionService>().chatCredits;
 
   void onInputChanged(String val) {
     messageInput.value = val;
@@ -36,6 +36,8 @@ class ChatController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    Get.find<SubscriptionService>().fetchCredits();
+    
     final id = Get.parameters['astrologerId'];
     if (id != null) {
       loadAstrologer(id);
@@ -120,10 +122,17 @@ class ChatController extends GetxController {
       return;
     }
 
-    // Check Free Limit (if not pro subscriber)
+    // Check credit balance
     final isPro = Get.find<SubscriptionService>().isPro;
-    if (!isPro && freeMessageCount.value <= 0) {
-      _showAdModal();
+    if (chatCredits.value <= 0) {
+      if (isPro) {
+        Get.snackbar(
+          'Daily Limit Reached',
+          'Your daily credits have been used. Resets tomorrow.',
+        );
+      } else {
+        _showAdModal();
+      }
       return;
     }
 
@@ -139,8 +148,8 @@ class ChatController extends GetxController {
     );
     messages.add(optimisticMsg);
 
-    // Decrement credit
-    _adService.decrementCredit();
+    // Optimistic credit deduction (backend is source of truth)
+    chatCredits.value -= 1;
     GuestService.to.incrementGuestChat();
 
     messageInput.value = '';
@@ -167,12 +176,15 @@ class ChatController extends GetxController {
 
     result.fold(
       onSuccess: (sendResult) {
-        // Replace optimistic user message with server version
-        // and add AI response
         messages.add(sendResult.aiResponse);
         scrollToBottom();
+
+        // Sync credits from backend (source of truth)
+        Get.find<SubscriptionService>().fetchCredits();
       },
       onFailure: (error) {
+        // Restore optimistic credit deduction on failure
+        chatCredits.value += 1;
         Get.snackbar('Error', 'Failed to get response: ${error.message}');
       },
     );
@@ -198,11 +210,36 @@ class ChatController extends GetxController {
     Get.back();
 
     if (success) {
-      _adService.resetCredits();
       Get.snackbar(
-        'Success',
-        'You earned 3 more free messages!',
-        backgroundColor: Colors.green,
+        'Processing Reward',
+        'Verifying with server...',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      // Poll for credits — the SSV webhook grants them server-to-server
+      final previousCredits = chatCredits.value;
+      for (int i = 0; i < 5; i++) {
+        await Future.delayed(const Duration(seconds: 3));
+        await SubscriptionService.to.fetchCredits();
+        if (chatCredits.value > previousCredits) {
+          Get.snackbar(
+            'Success',
+            'You earned ${chatCredits.value - previousCredits} credits!',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return;
+        }
+      }
+
+      // If credits didn't update after polling, inform the user
+      Get.snackbar(
+        'Pending',
+        'Reward is being processed. Credits will appear shortly.',
+        backgroundColor: Colors.orange,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
       );

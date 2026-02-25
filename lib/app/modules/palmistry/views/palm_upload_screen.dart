@@ -13,6 +13,8 @@ import '../../../widgets/inputs/app_text_field.dart';
 import '../../../widgets/state/state_widgets.dart';
 import '../controllers/palm_reading_controller.dart';
 import '../widgets/palm_image_selector.dart';
+import '../widgets/palm_scanner_overlay.dart';
+import '../../../routes/app_routes.dart';
 
 class PalmUploadScreen extends GetView<PalmReadingController> {
   const PalmUploadScreen({super.key});
@@ -26,6 +28,41 @@ class PalmUploadScreen extends GetView<PalmReadingController> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            tooltip: 'History',
+            onPressed: () => Get.toNamed(AppRoutes.palmReadingHistory),
+          ),
+          Center(
+            child: Obx(
+              () => Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.stars, color: Colors.white, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${SubscriptionService.to.chatCredits.value}',
+                        style: AppTypography.caption.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoadingStatus.value) {
@@ -125,29 +162,14 @@ class PalmUploadScreen extends GetView<PalmReadingController> {
               ),
             ),
 
-            // Loading Overlay
+            // Scanner Overlay
             if (controller.isProcessing)
-              Container(
-                color: Colors.black54,
-                child: Center(
-                  child: AppCard(
-                    padding: const EdgeInsets.all(AppDimensions.xl),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const CircularProgressIndicator(
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(height: AppDimensions.md),
-                        Text(
-                          controller.uploadProgress.value,
-                          style: AppTypography.body1,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              PalmScannerOverlay(
+                leftPalmImage: controller.leftPalmImage.value,
+                rightPalmImage: controller.rightPalmImage.value,
+                isUploading: controller.isUploading.value,
+                isCreating: controller.isCreating.value,
+                progressText: controller.uploadProgress.value,
               ),
           ],
         );
@@ -335,7 +357,7 @@ class PalmUploadScreen extends GetView<PalmReadingController> {
     final bool isFree = status.hasFreeReadingAvailable;
     final String message = isFree
         ? 'Free Lifetime Reading Available'
-        : '3 credits will be deducted';
+        : '10 credits will be deducted';
 
     return AppCard(
       backgroundColor:
@@ -370,7 +392,7 @@ class PalmUploadScreen extends GetView<PalmReadingController> {
                 ),
               ),
               AppChip(
-                label: isFree ? 'FREE' : '3 Credits',
+                label: isFree ? 'FREE' : '10 Credits',
                 isSelected: true,
                 onTap: () {},
                 backgroundColor: isFree ? AppColors.success : AppColors.primary,

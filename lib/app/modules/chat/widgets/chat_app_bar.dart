@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/services/impl/subscription_service.dart';
 import '../controllers/chat_controller.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -50,6 +52,34 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         );
       }),
       actions: [
+        Center(
+          child: Obx(
+            () => Padding(
+              padding: const EdgeInsets.only(right: 4.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.stars, color: AppColors.primary, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${SubscriptionService.to.chatCredits.value}',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
         PopupMenuButton<String>(
           onSelected: controller.onMenuAction,
           icon: const Icon(Icons.more_vert, color: Colors.black),

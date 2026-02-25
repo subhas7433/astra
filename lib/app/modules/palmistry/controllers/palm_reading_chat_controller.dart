@@ -5,6 +5,8 @@ import '../../../data/models/palm_reading_message_model.dart';
 import '../../../data/models/palm_reading_session_model.dart';
 import '../../../data/models/enums/sender_type.dart';
 import '../../../data/repositories/palmistry_repository.dart';
+import '../../../core/services/impl/subscription_service.dart';
+import '../../../core/constants/app_colors.dart';
 
 class PalmReadingChatController extends GetxController {
   final PalmistryRepository _palmistryRepository =
@@ -21,6 +23,8 @@ class PalmReadingChatController extends GetxController {
 
   String? _readingId;
 
+  RxInt get chatCredits => Get.find<SubscriptionService>().chatCredits;
+
   void onInputChanged(String val) {
     messageInput.value = val;
   }
@@ -28,6 +32,7 @@ class PalmReadingChatController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    SubscriptionService.to.fetchCredits();
     _readingId = Get.parameters['readingId'];
     if (_readingId != null) {
       loadReading(_readingId!);
@@ -60,6 +65,25 @@ class PalmReadingChatController extends GetxController {
 
     if (session.value == null) return;
 
+    final isPro = Get.find<SubscriptionService>().isPro;
+    if (chatCredits.value < 10) {
+      if (isPro) {
+        Get.snackbar(
+          'Daily Limit Reached',
+          'Your daily credits have been used. Resets tomorrow.',
+        );
+      } else {
+        SubscriptionService.to.showPaywall();
+        Get.snackbar(
+          'Not Enough Credits',
+          'You need 10 credits to ask a follow-up question. Upgrade to Pro!',
+          backgroundColor: AppColors.primary,
+          colorText: Colors.white,
+        );
+      }
+      return;
+    }
+
     final text = messageInput.value.trim();
 
     // Add optimistic user message
@@ -71,6 +95,9 @@ class PalmReadingChatController extends GetxController {
       createdAt: DateTime.now(),
     );
     messages.add(optimisticMsg);
+
+    // Optimistic credit deduction (backend is source of truth)
+    chatCredits.value -= 10;
 
     messageInput.value = '';
     textController.clear();
@@ -106,7 +133,24 @@ class PalmReadingChatController extends GetxController {
         scrollToBottom();
       },
       onFailure: (error) {
-        Get.snackbar('Error', 'Failed to get response: ${error.message}');
+        // Restore credits on failure
+        final isPro = Get.find<SubscriptionService>().isPro;
+        if (!isPro) {
+          chatCredits.value += 10;
+        }
+
+        if (error.message.toLowerCase().contains('insufficient credits') || 
+            error.toString().contains('402')) {
+          SubscriptionService.to.showPaywall();
+          Get.snackbar(
+            'Not Enough Credits',
+            'You need 10 credits to ask a follow-up question. Upgrade to Pro!',
+            backgroundColor: AppColors.primary,
+            colorText: Colors.white,
+          );
+        } else {
+          Get.snackbar('Error', 'Failed to get response: ${error.message}');
+        }
       },
     );
   }

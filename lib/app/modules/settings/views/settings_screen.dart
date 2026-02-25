@@ -29,7 +29,7 @@ class SettingsScreen extends GetView<SettingsController> {
             Obx(() {
               final isPro = Get.find<SubscriptionService>().isPro;
               return GestureDetector(
-                onTap: () => SubscriptionService.to.showPaywall(),
+                onTap: isPro ? null : () => SubscriptionService.to.showPaywall(),
                 child: Container(
                   padding: const EdgeInsets.all(AppDimensions.paddingMd),
                   decoration: BoxDecoration(
@@ -88,32 +88,7 @@ class SettingsScreen extends GetView<SettingsController> {
 
             const SizedBox(height: AppDimensions.paddingXl),
 
-            // Activity Section
-            Text(
-              'Activity',
-              style: AppTypography.h3.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.paddingSm),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-              ),
-              child: Column(
-                children: [
-                  SettingsItem(
-                    icon: Icons.back_hand_outlined,
-                    title: 'Palm Reading History',
-                    onTap: controller.onPalmReadingHistory,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: AppDimensions.paddingXl),
+            // Moved to Palm Reading Screen directly
 
             // General Settings (hidden for now)
             // Text(

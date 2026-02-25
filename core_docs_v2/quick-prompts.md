@@ -12,6 +12,8 @@ For creating plan
 Analyze the existing codebase and create a comprehensive implementation plan: Requirements: Review all related files and dependencies Follow the project's Technical Design Document (TDD) Apply standard practices: Centralized constants and configuration DRY principles with code reusability Consistent architectural patterns Deliverables: Context analysis of current implementation This phase feature breakdown aligned with TDD specifications Architecture recommendations maintaining design consistency Clear implementation roadmap with milestones Ensure the plan adheres to established design patterns and maintains alignment with the existing Technical Design Document and Functional spcs. Ultrathink
 
 
+now lets create the plan, read through the related files to follow DRY method, also expore the code base to understand the impact, we should not introduce any new bug
+
 ---
 
 ## Flutter Code Review Prompt

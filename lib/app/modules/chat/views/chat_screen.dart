@@ -39,6 +39,7 @@ class ChatScreen extends GetView<ChatController> {
                     time: msg.formattedTime,
                     avatarUrl: msg.isUserMessage ? null : 
                     controller.astrologer.value?.photoUrl,
+                    enableMarkdown: !msg.isUserMessage,
                   );
                 },
               );

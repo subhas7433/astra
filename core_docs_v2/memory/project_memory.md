@@ -4,11 +4,41 @@
 **Project**: Astro GPT - AI-Powered Astrology Companion
 **Tech Stack**: Flutter 3.x + Dart 3.x + GetX + Appwrite Cloud + AdMob + RevenueCat
 **Primary Goal**: Mobile app providing AI-powered astrology consultations, daily horoscopes, and spiritual guidance
-**Last Updated**: January 20, 2026
+**Last Updated**: February 11, 2026
 
 ---
 
 ## Critical Problems Solved
+
+### 2026-02-10 - Removed Session Active/Open-Close from Palm Reading
+
+**Problem**: Palm reading sessions had an `is_active` / open-close mechanism (with `closed_at` timestamp) that was unnecessary and complicated the UX. Users had to explicitly close sessions, and closed sessions blocked follow-up questions.
+
+**Solution**: Removed the concept entirely from both frontend and backend:
+
+**Frontend changes (Flutter):**
+- Removed `isActive` and `closedAt` fields from `PalmReadingSessionModel`
+- Removed close session button/icon from `PalmReadingChatScreen` app bar
+- Removed session status indicator (open/closed badge) from `PalmReadingHistoryCard`
+- Removed close confirmation dialog
+- Removed conditional logic that disabled message input when session was closed
+- Sessions are now permanent conversation threads - users can always send follow-up questions
+
+**Backend changes (FastAPI - separate repo `astro-gpt-api`):**
+- Removed `is_active` and `closed_at` fields from `PalmReadingSession` model
+- Removed `PUT /readings/{id}/close` and `PUT /readings/{id}/reopen` endpoints
+- Removed `PalmReadingCloseResponse` schema
+- Created migration to drop the columns
+
+**Frontend files modified:**
+- `lib/app/data/models/palm_reading_session_model.dart` - Removed `isActive`, `closedAt` fields
+- `lib/app/modules/palmistry/views/palm_reading_chat_screen.dart` - Removed close button, status badge, disabled input logic
+- `lib/app/modules/palmistry/widgets/palm_reading_history_card.dart` - Removed status indicator
+- `lib/app/modules/palmistry/controllers/palm_reading_chat_controller.dart` - Removed `closeSession()`, `reopenSession()` methods
+
+**Result**: Simpler UX. Sessions are permanent conversation threads with no open/close state.
+
+---
 
 ### 2026-01-20 - Today's Bhagwan Page Not Displaying Images and Significance
 

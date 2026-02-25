@@ -13,6 +13,8 @@ import '../../../data/models/enums/gender.dart';
 import '../../../data/models/palm_status_model.dart';
 import '../../../data/repositories/palmistry_repository.dart';
 import '../../../routes/app_routes.dart';
+import '../../../core/services/impl/subscription_service.dart';
+import '../../../core/constants/app_colors.dart';
 
 class PalmReadingController extends GetxController {
   final PalmistryRepository _palmistryRepository =
@@ -46,6 +48,7 @@ class PalmReadingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    SubscriptionService.to.fetchCredits();
     _prefillSubjectFromProfile();
     _loadPalmStatus();
   }
@@ -300,12 +303,24 @@ class PalmReadingController extends GetxController {
           );
         },
         onFailure: (error) {
-          Get.snackbar(
-            'Creation Failed',
-            error.message,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
+          // Handle insufficient credits specifically
+          if (error.message.toLowerCase().contains('insufficient credits') || 
+              error.toString().contains('402')) {
+            SubscriptionService.to.showPaywall();
+            Get.snackbar(
+              'Not Enough Credits',
+              'You need 10 credits for a palm reading. Upgrade to Pro!',
+              backgroundColor: AppColors.primary,
+              colorText: Colors.white,
+            );
+          } else {
+            Get.snackbar(
+              'Creation Failed',
+              error.message,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
         },
       );
     } catch (e) {

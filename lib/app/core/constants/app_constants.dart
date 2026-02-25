@@ -18,6 +18,10 @@ class AppConstants {
   static const String privacyPolicyUrl = 'https://tools.technoava.com/astra/privacy';
   static const String termsOfServiceUrl = 'https://tools.technoava.com/astra/terms';
 
+  /// RevenueCat
+  static const String revenueCatApiKey = 'goog_lVAzHDPmGglondnPxKJLFbIkZFt';
+  static const String revenueCatEntitlementId = 'Astra AI Pro';
+
   /// App version info
   static const String appVersion = '1.0.0';
   static const int appBuildNumber = 1;

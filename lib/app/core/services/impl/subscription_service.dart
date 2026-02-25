@@ -6,6 +6,8 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../data/repositories/subscription_repository.dart';
 import '../../../data/services/monetization_analytics.dart';
+import '../../constants/app_constants.dart';
+import '../../services/interfaces/i_auth_service.dart';
 
 enum SubscriptionTier {
   free,
@@ -33,8 +35,8 @@ class PaywallPackage {
 class SubscriptionService extends GetxService {
   static SubscriptionService get to => Get.find();
 
-  // RevenueCat API Keys
-  final String _apiKey = 'goog_lVAzHDPmGglondnPxKJLFbIkZFt';
+  // RevenueCat
+  static const String _apiKey = AppConstants.revenueCatApiKey;
 
   // Set to false for real RevenueCat (true for UI testing without store)
   final bool _isMockMode = false;
@@ -42,6 +44,7 @@ class SubscriptionService extends GetxService {
   final currentTier = SubscriptionTier.free.obs;
   final packages = <PaywallPackage>[].obs;
   final isLoading = true.obs;
+  final chatCredits = 0.obs;
 
   // Computed properties for feature gating
   bool get isPro => currentTier.value == SubscriptionTier.pro;
@@ -56,12 +59,66 @@ class SubscriptionService extends GetxService {
   Future<void> initialize() async {
     try {
       if (!_isMockMode) {
-        await Purchases.configure(PurchasesConfiguration(_apiKey));
+        final authService = Get.find<IAuthService>();
+        
+        // Pass the appUserID during configuration if we already have it
+        if (authService.currentUserId != null && authService.currentUserId!.isNotEmpty) {
+           await Purchases.configure(
+             PurchasesConfiguration(_apiKey)..appUserID = authService.currentUserId,
+           );
+        } else {
+           await Purchases.configure(PurchasesConfiguration(_apiKey));
+        }
+
+        // Listen for auth state changes so RevenueCat always knows the active user
+        
+        // Initial setup if already logged in
+        if (authService.currentUserId != null && authService.currentUserId!.isNotEmpty) {
+          await Purchases.logIn(authService.currentUserId!);
+        }
+
+        // Listen for future changes (including the async resolve on app startup)
+        authService.authStateChanges.listen((userId) async {
+          if (userId != null && userId.isNotEmpty) {
+            await Purchases.logIn(userId);
+          } else {
+            await Purchases.logOut();
+          }
+          await _checkSubscriptionStatus();
+          await fetchCredits();
+        });
+
         await _checkSubscriptionStatus();
       }
       await fetchOfferings();
+      await fetchCredits();
     } catch (e) {
       debugPrint('Error initializing RevenueCat: $e');
+    }
+  }
+
+  Future<void> fetchCredits() async {
+    try {
+      // Find current user id from AuthService mapping (assuming it's available)
+      final authService = Get.find<IAuthService>();
+      final userId = authService.currentUserId;
+      if (userId != null && userId.isNotEmpty) {
+        final repo = Get.find<SubscriptionRepository>();
+        final result = await repo.getSubscription(userId);
+        if (result.isSuccess) {
+          final data = result.valueOrNull;
+          if (data != null) {
+            chatCredits.value = data.chatCredits;
+            
+            // Sync tier from backend (source of truth)
+            currentTier.value = data.isPro
+                ? SubscriptionTier.pro
+                : SubscriptionTier.free;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching credits: $e');
     }
   }
 
@@ -76,7 +133,7 @@ class SubscriptionService extends GetxService {
   }
 
   void _updateCustomerStatus(CustomerInfo customerInfo) {
-    if (customerInfo.entitlements.all['pro_access']?.isActive ?? false) {
+    if (customerInfo.entitlements.all[AppConstants.revenueCatEntitlementId]?.isActive ?? false) {
       currentTier.value = SubscriptionTier.pro;
     } else {
       currentTier.value = SubscriptionTier.free;
@@ -137,19 +194,9 @@ class SubscriptionService extends GetxService {
         if (package.realPackage != null) {
           final purchaseResult = await Purchases.purchasePackage(package.realPackage!);
           _updateCustomerStatus(purchaseResult.customerInfo);
-          // Sync with backend
-          try {
-            final repo = Get.find<SubscriptionRepository>();
-            await repo.updateSubscription(
-              userId: '',
-              tier: 'pro',
-              platform: Platform.isAndroid ? 'android' : 'ios',
-              productId: package.identifier,
-              transactionId: purchaseResult.customerInfo.originalAppUserId,
-            );
-          } catch (e) {
-            debugPrint('Error syncing subscription with backend: $e');
-          }
+          // Backend is updated via RevenueCat webhook (server-to-server)
+          // Frontend only reads subscription state, never writes it
+          await fetchCredits();
           MonetizationAnalytics.trackSubscriptionStart(package.identifier, package.priceString);
           return true;
         }
@@ -187,7 +234,7 @@ class SubscriptionService extends GetxService {
 
   Future<void> showPaywall() async {
     try {
-      final result = await RevenueCatUI.presentPaywallIfNeeded('pro_access');
+      final result = await RevenueCatUI.presentPaywallIfNeeded(AppConstants.revenueCatEntitlementId);
       if (result == PaywallResult.purchased || result == PaywallResult.restored) {
         await _checkSubscriptionStatus();
       }

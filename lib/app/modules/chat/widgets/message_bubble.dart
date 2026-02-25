@@ -164,36 +164,61 @@ class MessageBubble extends StatelessWidget {
         top: AppDimensions.paddingSm,
         bottom: AppDimensions.paddingSm,
       ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppDimensions.paddingMd),
-        decoration: BoxDecoration(
-          color: AppColors.scaffoldDark,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        ),
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            MarkdownBody(
-              data: message,
-              shrinkWrap: true,
-              selectable: true,
-              styleSheet: _markdownStyleSheet(),
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                time,
-                style: AppTypography.caption.copyWith(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  fontSize: 10,
+            if (avatarUrl != null) ...[
+              CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(avatarUrl!),
+                backgroundColor: Colors.grey[300],
+              ),
+              const SizedBox(width: AppDimensions.sm),
+            ],
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                decoration: BoxDecoration(
+                  color: AppColors.surface, // Changed from scaffoldDark to surface for cream color
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(4),
+                    topRight: Radius.circular(AppDimensions.radiusLg),
+                    bottomLeft: Radius.circular(AppDimensions.radiusLg),
+                    bottomRight: Radius.circular(AppDimensions.radiusLg),
+                  ),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2), // Add subtle orange border
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MarkdownBody(
+                      data: message,
+                      shrinkWrap: true,
+                      selectable: true,
+                      styleSheet: _markdownStyleSheet(),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Text(
+                        time,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+            const SizedBox(width: 40),
           ],
         ),
-      ),
     );
   }
 
@@ -202,32 +227,32 @@ class MessageBubble extends StatelessWidget {
     final muted = Colors.white.withValues(alpha: 0.7);
 
     return MarkdownStyleSheet(
-      p: const TextStyle(fontSize: 15, color: white, height: 1.6),
-      h1: const TextStyle(
+      p: TextStyle(fontSize: 15, color: AppColors.textPrimary, height: 1.6),
+      h1: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: white,
+        color: AppColors.textPrimary,
         height: 1.4,
       ),
-      h2: const TextStyle(
+      h2: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: white,
+        color: AppColors.textPrimary,
         height: 1.4,
       ),
-      h3: const TextStyle(
+      h3: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: white,
+        color: AppColors.textPrimary,
         height: 1.4,
       ),
-      strong: const TextStyle(fontWeight: FontWeight.bold, color: white),
-      em: const TextStyle(fontStyle: FontStyle.italic, color: white),
-      listBullet: const TextStyle(fontSize: 15, color: white, height: 1.6),
+      strong: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+      em: TextStyle(fontStyle: FontStyle.italic, color: AppColors.textPrimary),
+      listBullet: TextStyle(fontSize: 15, color: AppColors.textPrimary, height: 1.6),
       listIndent: 20.0,
       blockquote: TextStyle(
         fontSize: 15,
-        color: muted,
+        color: AppColors.textSecondary,
         fontStyle: FontStyle.italic,
         height: 1.6,
       ),
@@ -242,18 +267,19 @@ class MessageBubble extends StatelessWidget {
       blockquotePadding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
       code: TextStyle(
         fontSize: 13,
-        color: AppColors.primaryLight,
-        backgroundColor: Colors.white.withValues(alpha: 0.1),
+        color: AppColors.primary,
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
       ),
       codeblockDecoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
       ),
       codeblockPadding: const EdgeInsets.all(12),
       horizontalRuleDecoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.2),
+            color: AppColors.border,
             width: 1,
           ),
         ),

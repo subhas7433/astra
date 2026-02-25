@@ -85,15 +85,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
         );
       }
 
-      // Placeholder or empty while loading
-      // For banners, we usually show nothing until loaded to avoid layout jumps,
-      // or a placeholder if layout stability is preferred.
-      // Given the design (bottom of screen), empty is usually fine or a fixed height container.
-      // returning SizedBox.shrink() effectively hides it.
-      return SizedBox(
-        height: widget.adSize.height.toDouble(),
-        width: widget.adSize.width.toDouble(),
-      ); 
+      return const SizedBox.shrink();
     });
   }
 }

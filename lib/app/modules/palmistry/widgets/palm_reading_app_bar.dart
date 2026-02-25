@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/services/impl/subscription_service.dart';
 import '../controllers/palm_reading_chat_controller.dart';
 
 class PalmReadingAppBar extends StatelessWidget
@@ -65,6 +66,36 @@ class PalmReadingAppBar extends StatelessWidget
           ],
         );
       }),
+      actions: [
+        Center(
+          child: Obx(
+            () => Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.stars, color: Colors.white, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${SubscriptionService.to.chatCredits.value}',
+                      style: AppTypography.caption.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
